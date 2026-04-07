@@ -300,7 +300,7 @@ const ProfilePage = () => {
 
         {/* 版本信息 */}
         <View className="flex flex-col items-center py-4">
-          <Text className="block text-xs text-gray-400">多平台卖课小程序 v1.0.0</Text>
+          <Text className="block text-xs text-gray-400">在线课堂 v1.0.0</Text>
         </View>
       </ScrollView>
     </View>

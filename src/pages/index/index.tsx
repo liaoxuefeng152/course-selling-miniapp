@@ -234,7 +234,7 @@ const IndexPage = () => {
     <View className="min-h-screen bg-gray-50 pb-16">
       {/* 顶部搜索区域 */}
       <View className="bg-gradient-to-r from-orange-500 to-orange-400 px-4 pt-4 pb-6">
-        <Text className="block text-white text-xl font-bold mb-4">多平台卖课</Text>
+        <Text className="block text-white text-xl font-bold mb-4">在线课堂</Text>
         <View className="bg-white rounded-xl px-4 py-3 flex flex-row items-center">
           <Search size={20} color="#9CA3AF" />
           <View className="flex-1 ml-2">
