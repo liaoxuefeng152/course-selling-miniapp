@@ -5,12 +5,21 @@ export default defineAppConfig({
     'pages/study/index',
     'pages/profile/index',
     'pages/course/index',
-    'pages/course-list/index'
+    'pages/course-list/index',
+    'pages/order/index',
+    'pages/coupons/index',
+    'pages/favorites/index',
+    'pages/history/index',
+    'pages/reviews/index',
+    'pages/messages/index',
+    'pages/reminders/index',
+    'pages/settings/index',
+    'pages/help/index'
   ],
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: '多平台卖课',
+    navigationBarTitleText: '在线课堂',
     navigationBarTextStyle: 'black'
   },
   tabBar: {

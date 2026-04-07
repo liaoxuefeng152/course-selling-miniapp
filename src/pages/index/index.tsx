@@ -196,7 +196,7 @@ const IndexPage = () => {
     });
   };
 
-  const handleLiveClick = (liveId: number) => {
+  const handleLiveClick = (_liveId: number) => {
     Taro.switchTab({
       url: '/pages/live/index',
     });
