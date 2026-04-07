@@ -197,8 +197,8 @@ const IndexPage = () => {
   };
 
   const handleLiveClick = (liveId: number) => {
-    Taro.navigateTo({
-      url: `/pages/live-detail/index?id=${liveId}`,
+    Taro.switchTab({
+      url: '/pages/live/index',
     });
   };
 
