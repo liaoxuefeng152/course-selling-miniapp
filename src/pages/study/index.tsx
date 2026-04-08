@@ -98,13 +98,13 @@ const StudyPage = () => {
 
   const handleCourseClick = (courseId: number) => {
     Taro.navigateTo({
-      url: `/pages/course/index?id=${courseId}&mode=study`,
+      url: `/pages/course-play/index?courseId=${courseId}`,
     });
   };
 
   const handleContinueStudy = (courseId: number) => {
     Taro.navigateTo({
-      url: `/pages/course/index?id=${courseId}&mode=study`,
+      url: `/pages/course-play/index?courseId=${courseId}`,
     });
   };
 

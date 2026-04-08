@@ -173,7 +173,21 @@ const CoursePage = () => {
 
   const handlePlayFreeLesson = (lesson: Lesson) => {
     Taro.navigateTo({
-      url: `/pages/player/index?lessonId=${lesson.id}&courseId=${course?.id}`,
+      url: `/pages/course-play/index?courseId=${course?.id}&lessonId=${lesson.id}`,
+    });
+  };
+
+  const handleLockedLessonClick = () => {
+    Taro.showModal({
+      title: '提示',
+      content: '该章节需要购买课程后才能观看',
+      confirmText: '立即购买',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          handleBuy();
+        }
+      },
     });
   };
 
@@ -399,7 +413,13 @@ const CoursePage = () => {
                                 播放
                               </Button>
                             ) : (
-                              <View className="w-4 h-4 flex items-center justify-center">
+                              <View
+                                className="w-4 h-4 flex items-center justify-center cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleLockedLessonClick();
+                                }}
+                              >
                                 <Text className="text-gray-400 text-xs">🔒</Text>
                               </View>
                             )}

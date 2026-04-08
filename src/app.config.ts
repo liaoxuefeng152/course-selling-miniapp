@@ -2,11 +2,13 @@ export default defineAppConfig({
   pages: [
     'pages/index/index',
     'pages/live/index',
+    'pages/live-detail/index',
     'pages/study/index',
     'pages/profile/index',
     'pages/login/index',
     'pages/profile/edit/index',
     'pages/course/index',
+    'pages/course-play/index',
     'pages/course-list/index',
     'pages/order/index',
     'pages/order/confirm',
