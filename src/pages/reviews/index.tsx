@@ -5,7 +5,6 @@ import { Star } from 'lucide-react-taro';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import './index.css';
 
 interface Review {
   id: number;

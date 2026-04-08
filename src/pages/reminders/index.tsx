@@ -5,7 +5,6 @@ import { Bell, Clock, Radio, Trash2 } from 'lucide-react-taro';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import './index.css';
 
 interface Reminder {
   id: number;

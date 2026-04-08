@@ -3,7 +3,6 @@ import { useState } from 'react';
 import Taro from '@tarojs/taro';
 import { Bell, Trash2 } from 'lucide-react-taro';
 import { Card, CardContent } from '@/components/ui/card';
-import './index.css';
 
 interface Notification {
   id: number;

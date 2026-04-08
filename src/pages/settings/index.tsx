@@ -14,7 +14,6 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import './index.css';
 
 const SettingsPage = () => {
   const [settings, setSettings] = useState({

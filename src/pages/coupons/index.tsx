@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Ticket, Clock, Gift } from 'lucide-react-taro';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import './index.css';
 
 interface Coupon {
   id: string;
