@@ -29,6 +29,13 @@ const StudyPage = () => {
     streakDays: 0,
   });
 
+  // 默认图片
+  const defaultCover = 'https://picsum.photos/seed/default-course/400/300';
+
+  const handleImageError = (e: any) => {
+    e.target.src = defaultCover;
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -161,8 +168,9 @@ const StudyPage = () => {
                     <View className="flex flex-row">
                       <Image
                         className="w-24 h-24"
-                        src={course.cover}
+                        src={course.cover || defaultCover}
                         mode="aspectFill"
+                        onError={handleImageError}
                       />
                       <CardContent className="flex-1 p-3 flex flex-col justify-between">
                         <View>
@@ -218,8 +226,9 @@ const StudyPage = () => {
                       <View className="relative w-24 h-24">
                         <Image
                           className="w-full h-full"
-                          src={course.cover}
+                          src={course.cover || defaultCover}
                           mode="aspectFill"
+                          onError={handleImageError}
                         />
                         <View className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                           <Badge variant="secondary" className="bg-green-500 text-white">
