@@ -5,7 +5,6 @@ import {
   BookOpen,
   Video,
   Users,
-  ShoppingCart,
   TrendingUp,
   DollarSign,
   Bell,
@@ -57,76 +56,160 @@ const InstructorHomePage = () => {
 
   // 未认证提示
   if (!instructorInfo || instructorInfo.status !== InstructorStatus.VERIFIED) {
+    // 演示数据
+    const demoStats = {
+      todaySales: 12580,
+      totalSales: 45890,
+      courseCount: 12,
+      liveCount: 8,
+      studentCount: 3256,
+    }
+
     return (
       <View className="min-h-screen bg-gray-50 pb-16">
         <View className="bg-white px-4 py-4">
           <View className="flex flex-row items-center justify-between">
             <Text className="block text-lg font-semibold text-gray-800">讲师工作台</Text>
-            <Bell size={24} color="#374151" />
+            <View className="flex flex-row items-center">
+              <Badge variant="outline" className="mr-2">未认证</Badge>
+              <Bell size={24} color="#374151" />
+            </View>
           </View>
         </View>
 
-        <ScrollView scrollY className="flex-1 px-4 mt-4">
-          <Card className="mb-4 border-orange-200 bg-orange-50">
-            <CardContent className="p-6">
-              <View className="flex flex-row items-start">
-                <TriangleAlert size={24} color="#FF6B35" className="mt-1 mr-3 flex-shrink-0" />
-                <View className="flex-1">
-                  <Text className="block text-base font-semibold text-orange-800 mb-2">未认证</Text>
-                  <Text className="block text-sm text-orange-700 mb-4">
-                    您还未完成讲师认证，认证通过后即可使用讲师端功能。
-                  </Text>
-                  <View className="flex flex-row gap-2">
-                    <Button
-                      className="bg-orange-500 text-white"
-                      onClick={() => Taro.navigateTo({ url: '/pages/instructor/certify/index' })}
-                    >
-                      立即认证
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        useUserStore.getState().setInstructorInfo({
-                          userId: userInfo?.id || '',
-                          status: InstructorStatus.VERIFIED,
-                          certifyType: 'personal' as any,
-                          realName: '测试讲师',
-                          createdAt: new Date().toISOString(),
-                          updatedAt: new Date().toISOString(),
-                        })
-                        Taro.showToast({ title: '已跳过认证', icon: 'success' })
-                      }}
-                    >
-                      跳过认证体验
-                    </Button>
+        <ScrollView scrollY className="flex-1">
+          {/* 数据预览区域 */}
+          <View className="px-4 mt-4">
+            <Card className="shadow-md border-orange-200">
+              <CardContent className="p-4">
+                <View className="flex flex-row items-center justify-between mb-3">
+                  <Text className="block text-sm font-medium text-gray-700">数据预览</Text>
+                  <View className="px-2 py-1 bg-orange-100 rounded-full">
+                    <Text className="text-xs text-orange-600">演示数据</Text>
                   </View>
                 </View>
-              </View>
-            </CardContent>
-          </Card>
+                <View className="grid grid-cols-2 gap-3">
+                  <View className="bg-orange-50 rounded-xl p-3">
+                    <DollarSign size={18} color="#FF6B35" />
+                    <Text className="block text-xl font-bold text-gray-800 mt-1">
+                      ¥{demoStats.todaySales.toLocaleString()}
+                    </Text>
+                    <Text className="block text-xs text-gray-500 mt-1">今日销售额</Text>
+                  </View>
 
-          {/* 功能预览 */}
-          <Card className="mb-4">
-            <CardContent className="p-6">
-              <Text className="block text-base font-semibold text-gray-800 mb-4">认证后可用功能</Text>
-              <View className="space-y-3">
-                {[
-                  { icon: TrendingUp, label: '数据统计', desc: '查看销售、学员数据' },
-                  { icon: DollarSign, label: '收益管理', desc: '查看收益、申请提现' },
-                  { icon: Users, label: '学员管理', desc: 'PC端管理学员信息' },
-                  { icon: BookOpen, label: '课程管理', desc: 'PC端管理课程内容' },
-                ].map((item, index) => (
-                  <View key={index} className="flex flex-row items-center p-3 bg-gray-50 rounded-lg">
-                    <item.icon size={20} color="#FF6B35" />
-                    <View className="flex-1 ml-3">
-                      <Text className="block text-sm font-medium text-gray-800">{item.label}</Text>
-                      <Text className="block text-xs text-gray-500 mt-0.5">{item.desc}</Text>
+                  <View className="bg-blue-50 rounded-xl p-3">
+                    <BookOpen size={18} color="#3B82F6" />
+                    <Text className="block text-xl font-bold text-gray-800 mt-1">
+                      {demoStats.courseCount}
+                    </Text>
+                    <Text className="block text-xs text-gray-500 mt-1">课程总数</Text>
+                  </View>
+
+                  <View className="bg-green-50 rounded-xl p-3">
+                    <Users size={18} color="#10B981" />
+                    <Text className="block text-xl font-bold text-gray-800 mt-1">
+                      {demoStats.studentCount}
+                    </Text>
+                    <Text className="block text-xs text-gray-500 mt-1">学员总数</Text>
+                  </View>
+
+                  <View className="bg-purple-50 rounded-xl p-3">
+                    <Video size={18} color="#8B5CF6" />
+                    <Text className="block text-xl font-bold text-gray-800 mt-1">
+                      {demoStats.liveCount}
+                    </Text>
+                    <Text className="block text-xs text-gray-500 mt-1">直播场次</Text>
+                  </View>
+                </View>
+                <View className="mt-3 p-2 bg-gray-50 rounded-lg">
+                  <Text className="text-xs text-gray-500 text-center">
+                    * 以上为演示数据，认证后可查看真实数据
+                  </Text>
+                </View>
+              </CardContent>
+            </Card>
+          </View>
+
+          {/* 认证引导卡片 */}
+          <View className="px-4 mt-4">
+            <Card className="border-orange-200 bg-orange-50">
+              <CardContent className="p-6">
+                <View className="flex flex-row items-start">
+                  <TriangleAlert size={24} color="#FF6B35" className="mt-1 mr-3 flex-shrink-0" />
+                  <View className="flex-1">
+                    <Text className="block text-base font-semibold text-orange-800 mb-2">
+                      完成认证，开启知识变现
+                    </Text>
+                    <Text className="block text-sm text-orange-700 mb-4">
+                      认证通过后，您可以创建课程、开展直播、管理学员，实现知识变现
+                    </Text>
+                    <View className="space-y-2 mb-4">
+                      <View className="flex flex-row items-center">
+                        <View className="w-2 h-2 rounded-full bg-orange-500 mr-2" />
+                        <Text className="text-sm text-orange-700">创建课程并售卖</Text>
+                      </View>
+                      <View className="flex flex-row items-center">
+                        <View className="w-2 h-2 rounded-full bg-orange-500 mr-2" />
+                        <Text className="text-sm text-orange-700">开展直播带货</Text>
+                      </View>
+                      <View className="flex flex-row items-center">
+                        <View className="w-2 h-2 rounded-full bg-orange-500 mr-2" />
+                        <Text className="text-sm text-orange-700">查看学员订单</Text>
+                      </View>
+                      <View className="flex flex-row items-center">
+                        <View className="w-2 h-2 rounded-full bg-orange-500 mr-2" />
+                        <Text className="text-sm text-orange-700">申请提现收益</Text>
+                      </View>
+                    </View>
+                    <View className="flex flex-row gap-2">
+                      <Button
+                        className="bg-orange-500 text-white"
+                        onClick={() => Taro.navigateTo({ url: '/pages/instructor/certify/index' })}
+                      >
+                        立即认证
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          // 体验预览模式
+                          useUserStore.getState().setInstructorInfo({
+                            userId: userInfo?.id || '',
+                            status: InstructorStatus.VERIFIED,
+                            certifyType: 'personal' as any,
+                            realName: '体验讲师',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                          })
+                          setInstructorStats(demoStats)
+                          Taro.showToast({ title: '进入预览模式', icon: 'success' })
+                        }}
+                      >
+                        体验预览
+                      </Button>
                     </View>
                   </View>
-                ))}
-              </View>
-            </CardContent>
-          </Card>
+                </View>
+              </CardContent>
+            </Card>
+          </View>
+
+          {/* PC端管理介绍 */}
+          <View className="px-4 mt-4 mb-4">
+            <Card>
+              <CardContent className="p-6">
+                <Text className="block text-base font-semibold text-gray-800 mb-3">
+                  PC端管理
+                </Text>
+                <Text className="block text-sm text-gray-600 mb-4">
+                  课程管理、直播创建、学员管理等功能请在PC端操作
+                </Text>
+                <Button variant="outline" size="sm" disabled>
+                  <Monitor size={16} color="#9CA3AF" />
+                  <Text className="ml-2">前往PC端（认证后可用）</Text>
+                </Button>
+              </CardContent>
+            </Card>
+          </View>
         </ScrollView>
       </View>
     )
