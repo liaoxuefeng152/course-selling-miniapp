@@ -56,8 +56,24 @@ const SettingsPage = () => {
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
+          // 清除登录状态
+          try {
+            Taro.clearStorageSync();
+          } catch (e) {
+            console.error('清除存储失败:', e);
+          }
+          
           Taro.showToast({ title: '已退出登录', icon: 'success' });
-          // 实际应该清除登录状态并跳转
+          
+          // 跳转到个人中心页面（显示未登录状态）
+          setTimeout(() => {
+            Taro.redirectTo({
+              url: '/pages/profile/index',
+              fail: () => {
+                Taro.switchTab({ url: '/pages/profile/index' });
+              }
+            });
+          }, 1000);
         }
       },
     });
