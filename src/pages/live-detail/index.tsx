@@ -1,4 +1,4 @@
-import { View, Text, Image, ScrollView } from '@tarojs/components';
+import { View, Text, Image, ScrollView, Video } from '@tarojs/components';
 import { useState, useEffect, useRef } from 'react';
 import Taro, { useRouter } from '@tarojs/taro';
 import {
@@ -9,6 +9,10 @@ import {
   Mic,
   ArrowLeft,
   EllipsisVertical,
+  Play,
+  Pause,
+  RotateCcw,
+  Maximize2,
 } from 'lucide-react-taro';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +33,9 @@ interface Live {
   viewers: number;
   likes: number;
   isFollowed: boolean;
+  isReserved: boolean;
   description: string;
+  videoUrl?: string; // 回放视频地址
 }
 
 // 评论类型定义
@@ -62,8 +68,13 @@ const LiveDetailPage = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [isSubmittingMic, setIsSubmittingMic] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   const scrollViewRef = useRef<any>(null);
+  const videoRef = useRef<any>(null);
 
   useEffect(() => {
     fetchLiveDetail();
@@ -72,21 +83,63 @@ const LiveDetailPage = () => {
 
   const fetchLiveDetail = async () => {
     try {
-      // 模拟数据
-      const mockLive: Live = {
-        id: Number(id) || 1,
-        title: '抖音直播带货实战分享',
-        cover: 'https://picsum.photos/seed/live-detail/400/300',
-        teacher: '刘老师',
-        teacherAvatar: 'https://picsum.photos/seed/teacher1/100/100',
-        startTime: '2024-01-15 20:00',
-        status: 'live',
-        viewers: 2341,
-        likes: 15678,
-        isFollowed: false,
-        description:
-          '本次直播将分享抖音直播带货的核心技巧，包括选品策略、话术设计、流量获取等内容，帮助新手快速上手直播带货。',
-      };
+      // 根据 id 模拟不同状态的直播
+      const liveId = Number(id) || 1;
+      let mockLive: Live;
+
+      if (liveId === 1) {
+        // 即将开始的直播
+        mockLive = {
+          id: 1,
+          title: '抖音直播带货实战分享',
+          cover: 'https://picsum.photos/seed/live-upcoming/400/300',
+          teacher: '刘老师',
+          teacherAvatar: 'https://picsum.photos/seed/teacher1/100/100',
+          startTime: '今晚 20:00',
+          status: 'upcoming',
+          viewers: 0,
+          likes: 0,
+          isFollowed: false,
+          isReserved: false,
+          description:
+            '本次直播将分享抖音直播带货的核心技巧，包括选品策略、话术设计、流量获取等内容，帮助新手快速上手直播带货。',
+        };
+      } else if (liveId === 4) {
+        // 回放直播
+        mockLive = {
+          id: 4,
+          title: '职场沟通技巧提升训练营',
+          cover: 'https://picsum.photos/seed/live-replay/400/300',
+          teacher: '李老师',
+          teacherAvatar: 'https://picsum.photos/seed/teacher4/100/100',
+          startTime: '2024-01-15 20:00',
+          status: 'replay',
+          viewers: 5678,
+          likes: 12345,
+          isFollowed: false,
+          isReserved: false,
+          description:
+            '本次直播分享了职场沟通的核心技巧，包括向上沟通、平级沟通、向下沟通等方面的内容。',
+          videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+        };
+      } else {
+        // 正在直播
+        mockLive = {
+          id: 2,
+          title: '2024年考研备考规划指导',
+          cover: 'https://picsum.photos/seed/live-detail/400/300',
+          teacher: '周老师',
+          teacherAvatar: 'https://picsum.photos/seed/teacher2/100/100',
+          startTime: '正在直播',
+          status: 'live',
+          viewers: 2341,
+          likes: 15678,
+          isFollowed: false,
+          isReserved: false,
+          description:
+            '本次直播将指导2024年考研的备考规划，包括科目复习、时间安排、心态调整等内容。',
+        };
+      }
 
       setLive(mockLive);
       setLikeCount(mockLive.likes);
@@ -195,6 +248,63 @@ const LiveDetailPage = () => {
     }
   };
 
+  const handleReserve = () => {
+    if (!live) return;
+
+    setLive({
+      ...live,
+      isReserved: !live.isReserved,
+    });
+
+    Taro.showToast({
+      title: live.isReserved ? '已取消预约' : '预约成功，开播前将提醒您',
+      icon: 'success',
+    });
+  };
+
+  const handlePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleReplay = () => {
+    if (videoRef.current) {
+      videoRef.current.seek(0);
+      setProgress(0);
+      setIsPlaying(true);
+      videoRef.current.play();
+    }
+  };
+
+  const handleTimeUpdate = (e: any) => {
+    const { currentTime: time, duration: dur } = e.detail;
+    setCurrentTime(time);
+    setDuration(dur);
+    if (dur > 0) {
+      setProgress((time / dur) * 100);
+    }
+  };
+
+  const handleProgressChange = (value: number) => {
+    setProgress(value);
+    if (videoRef.current) {
+      const seekTime = (value / 100) * duration;
+      videoRef.current.seek(seekTime);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleSendComment = () => {
     if (!commentText.trim()) {
       Taro.showToast({ title: '请输入评论内容', icon: 'none' });
@@ -269,9 +379,10 @@ const LiveDetailPage = () => {
 
   const isLive = live.status === 'live';
   const isUpcoming = live.status === 'upcoming';
+  const isReplay = live.status === 'replay';
 
   return (
-    <View className="min-h-screen bg-gray-50 pb-32">
+    <View className={`min-h-screen bg-gray-50 ${!isUpcoming ? 'pb-32' : ''}`}>
       {/* 顶部导航栏 */}
       <View
         style={{
@@ -310,80 +421,156 @@ const LiveDetailPage = () => {
       </View>
 
       {/* 直播画面区域 */}
-      <View className="relative bg-black">
-        {/* 占位视频区域 */}
-        <View
-          style={{
-            width: '100%',
-            height: 'calc(100vw * 9 / 16)',
-            backgroundColor: '#000',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {isLive && (
-            <View className="flex flex-col items-center">
-              <Image
-                className="w-full h-full"
-                src={live.cover}
-                mode="aspectFill"
-              />
-              <View className="absolute top-3 left-3 bg-red-500 px-2 py-1 rounded">
-                <View className="flex flex-row items-center gap-1">
-                  <View className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                  <Text className="text-white text-xs font-medium">直播中</Text>
+      <View className="relative bg-black w-full" style={{ height: '56.25vw' }}>
+        {/* 直播中 */}
+        {isLive && (
+          <View className="w-full h-full relative">
+            <Image
+              className="w-full h-full"
+              src={live.cover}
+              mode="aspectFill"
+            />
+            <View className="absolute top-3 left-3 bg-red-500 px-2 py-1 rounded">
+              <View className="flex flex-row items-center gap-1">
+                <View className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                <Text className="text-white text-xs font-medium">直播中</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* 即将开始 */}
+        {isUpcoming && (
+          <View className="w-full h-full relative">
+            <Image
+              className="w-full h-full opacity-50"
+              src={live.cover}
+              mode="aspectFill"
+            />
+            <View className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50">
+              <Badge variant="secondary" className="bg-amber-500 text-white mb-2 px-3 py-1">
+                即将开始
+              </Badge>
+              <Text className="text-white text-lg font-medium mb-4">{live.startTime}</Text>
+              <Button
+                variant={live.isReserved ? 'outline' : 'default'}
+                className={
+                  live.isReserved
+                    ? 'border-green-500 text-green-500 px-8'
+                    : 'bg-orange-500 text-white px-8'
+                }
+                onClick={handleReserve}
+              >
+                {live.isReserved ? '已预约' : '立即预约'}
+              </Button>
+            </View>
+          </View>
+        )}
+
+        {/* 回放 */}
+        {isReplay && (
+          <View className="w-full h-full relative">
+            <Video
+              id={`video-${live.id}`}
+              ref={videoRef}
+              src={live.videoUrl || ''}
+              className="w-full h-full"
+              controls={false}
+              autoplay={false}
+              loop={false}
+              muted={false}
+              onTimeUpdate={handleTimeUpdate}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+            />
+            <View className="absolute top-3 left-3 bg-gray-600 px-2 py-1 rounded">
+              <Text className="text-white text-xs font-medium">回放</Text>
+            </View>
+
+            {/* 回放控制层 */}
+            <View className="absolute inset-0 flex flex-col justify-end p-4" style={{ zIndex: 10, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 30%, transparent 100%)' }}>
+              {/* 进度条 */}
+              <View className="mb-3">
+                <View
+                  className="h-1 bg-white bg-opacity-30 rounded-full overflow-hidden cursor-pointer"
+                  onTouchStart={(e) => {
+                    const touch = (e as any).touches[0];
+                    const percent = (touch.x / 375) * 100;
+                    handleProgressChange(Math.min(100, Math.max(0, percent)));
+                  }}
+                >
+                  <View
+                    className="h-full bg-orange-500 transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
+                </View>
+                <View className="flex flex-row justify-between mt-1">
+                  <Text className="text-white text-xs">{formatTime(currentTime)}</Text>
+                  <Text className="text-white text-xs">{formatTime(duration)}</Text>
                 </View>
               </View>
-            </View>
-          )}
 
-          {isUpcoming && (
-            <View className="flex flex-col items-center">
-              <Image
-                className="w-full h-full opacity-50"
-                src={live.cover}
-                mode="aspectFill"
-              />
-              <View className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50">
-                <Badge variant="secondary" className="bg-amber-500 text-white mb-2 px-3 py-1">
-                  即将开始
-                </Badge>
-                <Text className="text-white text-lg font-medium">{live.startTime}</Text>
+              {/* 控制按钮 */}
+              <View className="flex flex-row items-center justify-center gap-6">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white hover:bg-opacity-20"
+                  onClick={handleReplay}
+                >
+                  <RotateCcw size={20} color="#FFFFFF" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white hover:bg-opacity-20"
+                  onClick={handlePlayPause}
+                >
+                  {isPlaying ? (
+                    <Pause size={32} color="#FFFFFF" />
+                  ) : (
+                    <Play size={32} color="#FFFFFF" />
+                  )}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white hover:bg-opacity-20"
+                  onClick={() => {
+                    if (videoRef.current) {
+                      videoRef.current.requestFullScreen({
+                        direction: 90,
+                      });
+                    }
+                  }}
+                >
+                  <Maximize2 size={20} color="#FFFFFF" />
+                </Button>
               </View>
             </View>
-          )}
+          </View>
+        )}
 
-          {!isLive && !isUpcoming && (
-            <View className="flex flex-col items-center">
-              <Image
-                className="w-full h-full"
-                src={live.cover}
-                mode="aspectFill"
+        {/* 点赞按钮（仅直播中显示） */}
+        {isLive && (
+          <View className="absolute bottom-4 right-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="bg-white bg-opacity-20 rounded-full p-3"
+              onClick={handleLike}
+            >
+              <Heart
+                size={32}
+                color={isLiked ? '#FF6B35' : '#FFFFFF'}
+                filled={isLiked}
               />
-              <View className="absolute top-3 left-3 bg-gray-600 px-2 py-1 rounded">
-                <Text className="text-white text-xs font-medium">回放</Text>
-              </View>
-            </View>
-          )}
-        </View>
-
-        {/* 点赞按钮 */}
-        <View className="absolute bottom-4 right-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-white bg-opacity-20 rounded-full p-3"
-            onClick={handleLike}
-          >
-            <Heart
-              size={32}
-              color={isLiked ? '#FF6B35' : '#FFFFFF'}
-              filled={isLiked}
-            />
-          </Button>
-          <Text className="text-white text-xs text-center mt-1">{likeCount}</Text>
-        </View>
+            </Button>
+            <Text className="text-white text-xs text-center mt-1">{likeCount}</Text>
+          </View>
+        )}
       </View>
 
       {/* 讲师信息 */}
@@ -402,18 +589,38 @@ const LiveDetailPage = () => {
           </View>
 
           <View className="flex flex-row gap-2">
-            <Button
-              variant={live.isFollowed ? 'outline' : 'default'}
-              size="sm"
-              className={
-                live.isFollowed
-                  ? 'border-orange-500 text-orange-500'
-                  : 'bg-orange-500 text-white'
-              }
-              onClick={handleFollow}
-            >
-              {live.isFollowed ? '已关注' : '关注'}
-            </Button>
+            {/* 预约按钮（仅即将开始时显示） */}
+            {isUpcoming && (
+              <Button
+                variant={live.isReserved ? 'outline' : 'default'}
+                size="sm"
+                className={
+                  live.isReserved
+                    ? 'border-green-500 text-green-500'
+                    : 'bg-orange-500 text-white'
+                }
+                onClick={handleReserve}
+              >
+                {live.isReserved ? '已预约' : '预约'}
+              </Button>
+            )}
+
+            {/* 关注按钮（直播中和回放时显示） */}
+            {!isUpcoming && (
+              <Button
+                variant={live.isFollowed ? 'outline' : 'default'}
+                size="sm"
+                className={
+                  live.isFollowed
+                    ? 'border-orange-500 text-orange-500'
+                    : 'bg-orange-500 text-white'
+                }
+                onClick={handleFollow}
+              >
+                {live.isFollowed ? '已关注' : '关注'}
+              </Button>
+            )}
+
             <Button variant="outline" size="icon" className="border-gray-300" onClick={handleShare}>
               <Share2 size={18} color="#9CA3AF" />
             </Button>
@@ -510,64 +717,66 @@ const LiveDetailPage = () => {
         </ScrollView>
       )}
 
-      {/* 底部互动栏 */}
-      <View
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: '#fff',
-          borderTop: '1px solid #e5e5e5',
-          padding: '12px',
-          display: 'flex',
-          flexDirection: 'row',
-          gap: '12px',
-          zIndex: 100,
-        }}
-      >
+      {/* 底部互动栏（仅在直播中和回放时显示） */}
+      {!isUpcoming && (
         <View
           style={{
-            flex: 1,
-            backgroundColor: '#f5f5f5',
-            borderRadius: '20px',
-            padding: '8px 12px',
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: '#fff',
+            borderTop: '1px solid #e5e5e5',
+            padding: '12px',
             display: 'flex',
             flexDirection: 'row',
-            alignItems: 'center',
+            gap: '12px',
+            zIndex: 100,
           }}
         >
-          <MessageSquare size={16} color="#9CA3AF" />
-          <Input
-            className="ml-2"
-            placeholder="说点什么..."
-            value={commentText}
-            onInput={(e) => setCommentText(e.detail.value)}
-          />
-        </View>
-
-        {isLive && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-purple-500 text-purple-500"
-            onClick={handleMicRequest}
-            disabled={isSubmittingMic}
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: '#f5f5f5',
+              borderRadius: '20px',
+              padding: '8px 12px',
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
           >
-            <Mic size={16} color="#8B5CF6" className="mr-1" />
-            连麦
-          </Button>
-        )}
+            <MessageSquare size={16} color="#9CA3AF" />
+            <Input
+              className="ml-2"
+              placeholder="说点什么..."
+              value={commentText}
+              onInput={(e) => setCommentText(e.detail.value)}
+            />
+          </View>
 
-        <Button
-          variant="default"
-          size="sm"
-          className="bg-orange-500 text-white"
-          onClick={handleSendComment}
-        >
-          发送
-        </Button>
-      </View>
+          {isLive && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-purple-500 text-purple-500"
+              onClick={handleMicRequest}
+              disabled={isSubmittingMic}
+            >
+              <Mic size={16} color="#8B5CF6" className="mr-1" />
+              连麦
+            </Button>
+          )}
+
+          <Button
+            variant="default"
+            size="sm"
+            className="bg-orange-500 text-white"
+            onClick={handleSendComment}
+          >
+            发送
+          </Button>
+        </View>
+      )}
     </View>
   );
 };
