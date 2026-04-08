@@ -88,9 +88,12 @@ const LoginPage = () => {
         setTimeout(() => {
           // 如果选择讲师角色，跳转到讲师工作台
           if (selectedRole === UserRole.INSTRUCTOR) {
-            Taro.redirectTo({ url: '/pages/instructor/index/index' });
+            console.log('跳转到讲师工作台');
+            Taro.reLaunch({ url: '/pages/instructor/index/index' });
           } else {
-            Taro.navigateBack();
+            // 学员角色，跳转到首页
+            console.log('跳转到首页');
+            Taro.reLaunch({ url: '/pages/index/index' });
           }
         }, 1000);
       } else {
