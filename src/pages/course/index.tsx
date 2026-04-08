@@ -13,6 +13,7 @@ import {
   CheckCheck,
   ChevronDown,
   ChevronUp,
+  Ticket,
 } from 'lucide-react-taro';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,13 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-
-// 课程章节类型定义
-interface Chapter {
-  id: number;
-  title: string;
-  lessons: Lesson[];
-}
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 // 课时类型定义
 interface Lesson {
@@ -35,6 +30,24 @@ interface Lesson {
   duration: string;
   isFree: boolean;
   isCompleted: boolean;
+}
+
+// 优惠券类型定义
+interface Coupon {
+  id: string;
+  title: string;
+  type: 'discount' | 'cash';
+  value: number;
+  minAmount: number;
+  validUntil: string;
+  description: string;
+}
+
+// 课程章节类型定义
+interface Chapter {
+  id: number;
+  title: string;
+  lessons: Lesson[];
 }
 
 // 课程类型定义
@@ -66,6 +79,39 @@ const CoursePage = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [expandedChapters, setExpandedChapters] = useState<number[]>([1]);
   const [showAllChapters, setShowAllChapters] = useState(false);
+  const [showCouponDialog, setShowCouponDialog] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+
+  // 可用优惠券列表
+  const availableCoupons: Coupon[] = [
+    {
+      id: 'coupon_001',
+      title: '新人专享券',
+      type: 'cash',
+      value: 50,
+      minAmount: 199,
+      validUntil: '2024-12-31',
+      description: '限首次购买使用',
+    },
+    {
+      id: 'coupon_002',
+      title: '限时折扣券',
+      type: 'discount',
+      value: 20,
+      minAmount: 100,
+      validUntil: '2024-02-28',
+      description: '全场课程通用',
+    },
+    {
+      id: 'coupon_003',
+      title: '满减券',
+      type: 'cash',
+      value: 30,
+      minAmount: 299,
+      validUntil: '2024-03-15',
+      description: '满299减30',
+    },
+  ];
 
   useEffect(() => {
     fetchCourseDetail();
@@ -193,8 +239,12 @@ const CoursePage = () => {
 
   const handleBuy = () => {
     if (!course) return;
+
+    const finalPrice = calculateFinalPrice();
+    const couponId = selectedCoupon?.id || '';
+
     Taro.navigateTo({
-      url: `/pages/order/confirm?courseId=${course.id}&price=${course.discountPrice || course.price}`,
+      url: `/pages/order/confirm?courseId=${course.id}&price=${finalPrice}&couponId=${couponId}`,
     });
   };
 
@@ -210,6 +260,47 @@ const CoursePage = () => {
       title: isFavorite ? '已取消收藏' : '收藏成功',
       icon: 'success',
     });
+  };
+
+  const handleShowCoupons = () => {
+    setShowCouponDialog(true);
+  };
+
+  const handleSelectCoupon = (coupon: Coupon | null) => {
+    setSelectedCoupon(coupon);
+    setShowCouponDialog(false);
+
+    if (coupon) {
+      Taro.showToast({
+        title: `已选择：${coupon.title}`,
+        icon: 'success',
+      });
+    }
+  };
+
+  const calculateFinalPrice = () => {
+    if (!course) return 0;
+
+    let price = course.discountPrice || course.price;
+
+    if (selectedCoupon) {
+      if (selectedCoupon.type === 'cash') {
+        // 现金券：直接减去金额
+        price = Math.max(0, price - selectedCoupon.value);
+      } else if (selectedCoupon.type === 'discount') {
+        // 折扣券：按比例减价
+        price = price * ((100 - selectedCoupon.value) / 100);
+      }
+    }
+
+    return Math.round(price * 100) / 100; // 保留两位小数
+  };
+
+  const getAvailableCoupons = () => {
+    if (!course) return [];
+
+    const price = course.discountPrice || course.price;
+    return availableCoupons.filter((coupon) => price >= coupon.minAmount);
   };
 
   const getCourseTypeLabel = (type: string) => {
@@ -477,16 +568,129 @@ const CoursePage = () => {
             <Text className="block text-xs text-gray-500 mt-1">收藏</Text>
           </View>
         </View>
-        <View className="flex-1 ml-4 flex flex-row gap-2">
-          <Button
-            variant="outline"
-            className="flex-1 border-orange-500 text-orange-500"
-            onClick={handleBuy}
-          >
-            ¥{course.discountPrice || course.price} 立即购买
-          </Button>
+        <View className="flex-1 ml-4 flex flex-col gap-2">
+          {/* 优惠券选择 */}
+          {getAvailableCoupons().length > 0 && (
+            <View
+              className="flex flex-row items-center justify-between bg-orange-50 px-3 py-2 rounded-lg"
+              onClick={handleShowCoupons}
+            >
+              <View className="flex flex-row items-center">
+                <Ticket size={16} color="#FF6B35" />
+                <Text className="block text-xs text-gray-600 ml-2">
+                  {selectedCoupon ? selectedCoupon.title : '选择优惠券'}
+                </Text>
+                {selectedCoupon && (
+                  <Badge variant="secondary" className="bg-orange-500 text-white ml-2">
+                    已选
+                  </Badge>
+                )}
+              </View>
+              <Text className="block text-xs text-orange-500">
+                {getAvailableCoupons().length}张可用
+              </Text>
+            </View>
+          )}
+
+          {/* 购买按钮 */}
+          <View className="flex flex-row gap-2">
+            {selectedCoupon && (
+              <Text className="text-sm text-gray-400 line-through mt-2">
+                ¥{course.discountPrice || course.price}
+              </Text>
+            )}
+            <Button
+              variant="outline"
+              className="flex-1 border-orange-500 text-orange-500"
+              onClick={handleBuy}
+            >
+              ¥{calculateFinalPrice()} 立即购买
+            </Button>
+          </View>
         </View>
       </View>
+
+      {/* 优惠券选择弹窗 */}
+      <Dialog open={showCouponDialog} onOpenChange={setShowCouponDialog}>
+        <DialogContent>
+          <DialogTitle>选择优惠券</DialogTitle>
+          <ScrollView scrollY className="max-h-80 mt-4">
+            <View className="flex flex-col gap-3">
+              {/* 不使用优惠券选项 */}
+              <Card
+                className={`overflow-hidden cursor-pointer ${
+                  selectedCoupon === null ? 'border-2 border-orange-500' : ''
+                }`}
+                onClick={() => handleSelectCoupon(null)}
+              >
+                <CardContent className="p-4">
+                  <View className="flex flex-row items-center justify-between">
+                    <View className="flex flex-row items-center">
+                      <Text className="block text-sm font-medium text-gray-800">
+                        不使用优惠券
+                      </Text>
+                    </View>
+                    {selectedCoupon === null && (
+                      <Badge variant="secondary" className="bg-orange-500 text-white">
+                        已选
+                      </Badge>
+                    )}
+                  </View>
+                </CardContent>
+              </Card>
+
+              {/* 优惠券列表 */}
+              {getAvailableCoupons().map((coupon) => (
+                <Card
+                  key={coupon.id}
+                  className={`overflow-hidden cursor-pointer ${
+                    selectedCoupon?.id === coupon.id ? 'border-2 border-orange-500' : ''
+                  }`}
+                  onClick={() => handleSelectCoupon(coupon)}
+                >
+                  <CardContent className="p-4">
+                    <View className="flex flex-row items-center justify-between">
+                      <View className="flex-1">
+                        <View className="flex flex-row items-center mb-1">
+                          <Text className="block text-sm font-medium text-gray-800">
+                            {coupon.title}
+                          </Text>
+                          <Badge
+                            variant="secondary"
+                            className="bg-red-100 text-red-600 ml-2"
+                          >
+                            {coupon.type === 'cash'
+                              ? `¥${coupon.value}`
+                              : `${coupon.value}折`}
+                          </Badge>
+                        </View>
+                        <Text className="block text-xs text-gray-500">
+                          满¥{coupon.minAmount}可用
+                        </Text>
+                        <Text className="block text-xs text-gray-400 mt-1">
+                          有效期至：{coupon.validUntil}
+                        </Text>
+                      </View>
+                      {selectedCoupon?.id === coupon.id && (
+                        <Badge variant="secondary" className="bg-orange-500 text-white">
+                          已选
+                        </Badge>
+                      )}
+                    </View>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {getAvailableCoupons().length === 0 && (
+                <View className="flex flex-col items-center py-8">
+                  <Ticket size={48} color="#D1D5DB" />
+                  <Text className="block text-gray-400 mt-2">暂无可用优惠券</Text>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        </DialogContent>
+      </Dialog>
     </View>
   );
 };
