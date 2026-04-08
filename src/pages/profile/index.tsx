@@ -14,6 +14,7 @@ import {
   User,
   GraduationCap,
   ArrowLeftRight,
+  BookOpen,
 } from 'lucide-react-taro';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
@@ -171,6 +172,11 @@ const ProfilePage = () => {
       icon: <Heart size={20} color="#EC4899" />,
       label: '我的收藏',
       onClick: () => handleMenuClick('/pages/favorites/index'),
+    },
+    {
+      icon: <BookOpen size={20} color="#FF6B35" />,
+      label: '我的课程',
+      onClick: () => handleMenuClick('/pages/my-courses/index'),
     },
     {
       icon: <Star size={20} color="#F59E0B" />,

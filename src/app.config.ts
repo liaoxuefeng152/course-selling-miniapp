@@ -21,6 +21,7 @@ export default defineAppConfig({
     'pages/settings/index',
     'pages/help/index',
     'pages/refund/index',
+    'pages/my-courses/index',
     // 讲师端页面
     'pages/instructor/index/index',
     'pages/instructor/certify/index',
