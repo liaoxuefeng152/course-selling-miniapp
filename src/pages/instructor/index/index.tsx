@@ -77,12 +77,31 @@ const InstructorHomePage = () => {
                   <Text className="block text-sm text-orange-700 mb-4">
                     您还未完成讲师认证，认证通过后即可使用课程管理、直播卖课等功能。
                   </Text>
-                  <Button
-                    className="bg-orange-500 text-white"
-                    onClick={() => Taro.navigateTo({ url: '/pages/instructor/certify/index' })}
-                  >
-                    立即认证
-                  </Button>
+                  <View className="flex flex-row gap-2">
+                    <Button
+                      className="bg-orange-500 text-white"
+                      onClick={() => Taro.navigateTo({ url: '/pages/instructor/certify/index' })}
+                    >
+                      立即认证
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        // 跳过认证，直接设置为已认证状态
+                        useUserStore.getState().setInstructorInfo({
+                          userId: userInfo?.id || '',
+                          status: InstructorStatus.VERIFIED,
+                          certifyType: 'personal' as any,
+                          realName: '测试讲师',
+                          createdAt: new Date().toISOString(),
+                          updatedAt: new Date().toISOString(),
+                        })
+                        Taro.showToast({ title: '已跳过认证', icon: 'success' })
+                      }}
+                    >
+                      跳过认证体验
+                    </Button>
+                  </View>
                 </View>
               </View>
             </CardContent>
