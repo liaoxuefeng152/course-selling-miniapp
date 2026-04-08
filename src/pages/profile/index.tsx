@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import {
   Settings,
@@ -28,11 +28,11 @@ interface MenuItem {
 }
 
 const ProfilePage = () => {
-  const [userInfo] = useState({
+  const [userInfo, setUserInfo] = useState({
     nickname: '学员用户',
     avatar: 'https://picsum.photos/seed/avatar/200/200',
     phone: '138****8888',
-    isLoggedIn: true,
+    isLoggedIn: false,
   });
 
   const [stats] = useState({
@@ -41,6 +41,43 @@ const ProfilePage = () => {
     coupons: 3,
     points: 580,
   });
+
+  // 从本地存储加载登录状态
+  useEffect(() => {
+    loadUserInfo();
+  }, []);
+
+  // 监听页面显示，重新加载状态
+  useEffect(() => {
+    const handleShow = () => {
+      loadUserInfo();
+    };
+
+    Taro.onAppShow?.(handleShow);
+
+    return () => {
+      Taro.offAppShow?.(handleShow);
+    };
+  }, []);
+
+  const loadUserInfo = () => {
+    try {
+      const stored = Taro.getStorageSync('userInfo');
+      if (stored && stored.nickname) {
+        setUserInfo({
+          nickname: stored.nickname || '学员用户',
+          avatar: stored.avatar || 'https://picsum.photos/seed/avatar/200/200',
+          phone: stored.phone || '138****8888',
+          isLoggedIn: true,
+        });
+      } else {
+        setUserInfo((prev) => ({ ...prev, isLoggedIn: false }));
+      }
+    } catch (e) {
+      console.error('加载用户信息失败:', e);
+      setUserInfo((prev) => ({ ...prev, isLoggedIn: false }));
+    }
+  };
 
   const handleLogin = () => {
     Taro.navigateTo({
@@ -88,16 +125,11 @@ const ProfilePage = () => {
           } catch (e) {
             console.error('清除存储失败:', e);
           }
-          
+
+          // 立即更新状态
+          setUserInfo((prev) => ({ ...prev, isLoggedIn: false }));
+
           Taro.showToast({ title: '已退出登录', icon: 'success' });
-          
-          // 重新加载页面
-          setTimeout(() => {
-            Taro.startPullDownRefresh();
-            setTimeout(() => {
-              Taro.stopPullDownRefresh();
-            }, 1000);
-          }, 500);
         }
       },
     });
