@@ -20,6 +20,7 @@ export default defineAppConfig({
     'pages/reminders/index',
     'pages/settings/index',
     'pages/help/index',
+    'pages/refund/index',
     // 讲师端页面
     'pages/instructor/index/index',
     'pages/instructor/certify/index',

@@ -5,7 +5,6 @@ import {
   Settings,
   Bell,
   Heart,
-  Clock,
   CreditCard,
   MessageCircle,
   ChevronRight,
@@ -101,6 +100,16 @@ const ProfilePage = () => {
     });
   };
 
+  const handleRefundClick = () => {
+    if (!userInfo) {
+      handleLogin();
+      return;
+    }
+    Taro.navigateTo({
+      url: '/pages/refund/index',
+    });
+  };
+
   const handleEditProfile = () => {
     if (!userInfo) {
       handleLogin();
@@ -169,11 +178,6 @@ const ProfilePage = () => {
       icon: <Heart size={20} color="#EC4899" />,
       label: '我的收藏',
       onClick: () => handleMenuClick('/pages/favorites/index'),
-    },
-    {
-      icon: <Clock size={20} color="#3B82F6" />,
-      label: '学习历史',
-      onClick: () => handleMenuClick('/pages/history/index'),
     },
     {
       icon: <Star size={20} color="#F59E0B" />,
@@ -304,7 +308,7 @@ const ProfilePage = () => {
               <View className="w-px bg-gray-200" />
               <View className="flex flex-col items-center">
                 <Text className="block text-xl font-bold text-gray-800">{stats.points}</Text>
-                <Text className="block text-xs text-gray-500">积分</Text>
+                <Text className="block text-xs text-gray-500">积分(分享、评价获得)</Text>
               </View>
             </View>
           </CardContent>
@@ -328,19 +332,38 @@ const ProfilePage = () => {
             <View className="flex flex-row justify-around">
               {[
                 { label: '待付款', icon: '💰' },
-                { label: '待发货', icon: '📦' },
-                { label: '待收货', icon: '🚚' },
+                { label: '已购买', icon: '📚' },
+                { label: '已完成', icon: '✅' },
                 { label: '待评价', icon: '⭐' },
               ].map((item, index) => (
                 <View
                   key={index}
                   className="flex flex-col items-center"
-                  onClick={() => handleOrderClick(['pending', 'shipped', 'received', 'review'][index])}
+                  onClick={() => handleOrderClick(['pending', 'paid', 'completed', 'review'][index])}
                 >
                   <Text className="text-2xl mb-1">{item.icon}</Text>
                   <Text className="block text-xs text-gray-600">{item.label}</Text>
                 </View>
               ))}
+            </View>
+          </CardContent>
+        </Card>
+
+        {/* 退款记录入口 */}
+        <Card className="mb-4">
+          <CardContent className="p-4">
+            <View
+              className="flex flex-row items-center justify-between"
+              onClick={handleRefundClick}
+            >
+              <View className="flex flex-row items-center">
+                <Text className="text-xl mr-2">💸</Text>
+                <Text className="block text-sm text-gray-800">退款记录</Text>
+              </View>
+              <View className="flex flex-row items-center">
+                <Text className="block text-sm text-gray-500 mr-1">查看全部</Text>
+                <ChevronRight size={16} color="#9CA3AF" />
+              </View>
             </View>
           </CardContent>
         </Card>
