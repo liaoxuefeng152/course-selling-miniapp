@@ -63,6 +63,7 @@ const ProfilePage = () => {
   const loadUserInfo = () => {
     try {
       const stored = Taro.getStorageSync('userInfo');
+      console.log('加载用户信息:', stored);
       if (stored && stored.nickname) {
         setUserInfo({
           nickname: stored.nickname || '学员用户',
@@ -70,8 +71,10 @@ const ProfilePage = () => {
           phone: stored.phone || '138****8888',
           isLoggedIn: true,
         });
+        console.log('用户已登录');
       } else {
         setUserInfo((prev) => ({ ...prev, isLoggedIn: false }));
+        console.log('用户未登录');
       }
     } catch (e) {
       console.error('加载用户信息失败:', e);
@@ -80,8 +83,19 @@ const ProfilePage = () => {
   };
 
   const handleLogin = () => {
+    console.log('点击登录按钮，准备跳转到登录页面');
     Taro.navigateTo({
       url: '/pages/login/index',
+      success: () => {
+        console.log('跳转登录页面成功');
+      },
+      fail: (err) => {
+        console.error('跳转登录页面失败:', err);
+        Taro.showToast({
+          title: '页面跳转失败',
+          icon: 'none'
+        });
+      }
     });
   };
 
@@ -133,6 +147,18 @@ const ProfilePage = () => {
         }
       },
     });
+  };
+
+  // 临时调试：强制清除存储并刷新
+  const handleDebugClear = () => {
+    try {
+      Taro.clearStorageSync();
+      setUserInfo((prev) => ({ ...prev, isLoggedIn: false }));
+      Taro.showToast({ title: '已清除存储', icon: 'success' });
+      console.log('调试：已清除所有存储');
+    } catch (e) {
+      console.error('清除失败:', e);
+    }
   };
 
   const menuItems: MenuItem[] = [
@@ -367,6 +393,17 @@ const ProfilePage = () => {
             </Button>
           </View>
         )}
+
+        {/* 临时调试按钮 */}
+        <View className="mb-4">
+          <Button
+            variant="ghost"
+            className="w-full text-xs text-gray-400"
+            onClick={handleDebugClear}
+          >
+            调试：清除存储
+          </Button>
+        </View>
 
         {/* 版本信息 */}
         <View className="flex flex-col items-center py-4">
