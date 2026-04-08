@@ -340,13 +340,12 @@ const CoursePlayPage = () => {
   return (
     <View className="h-screen flex flex-col bg-gray-50">
       {/* 视频播放区域 */}
-      <View className="relative bg-black">
+      <View className="relative bg-black w-full" style={{ height: '56.25vw' }}>
         <Video
           id={`video-${currentLesson.id}`}
           ref={videoRef}
           src={currentLesson.contentUrl || ''}
-          className="w-full"
-          style={{ height: 'calc(100vw * 9 / 16)' }}
+          className="w-full h-full"
           controls={false}
           autoplay={false}
           loop={false}
@@ -365,7 +364,7 @@ const CoursePlayPage = () => {
         />
 
         {/* 播放控制层 */}
-        <View className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black via-transparent to-transparent p-4">
+        <View className="absolute inset-0 flex flex-col justify-end p-4" style={{ zIndex: 10, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 30%, transparent 100%)' }}>
           {/* 课程标题 */}
           <View className="flex-1" />
 
