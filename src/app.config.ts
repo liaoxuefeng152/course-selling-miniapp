@@ -9,6 +9,7 @@ export default defineAppConfig({
     'pages/course/index',
     'pages/course-list/index',
     'pages/order/index',
+    'pages/order/confirm',
     'pages/coupons/index',
     'pages/favorites/index',
     'pages/history/index',
