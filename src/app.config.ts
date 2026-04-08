@@ -16,7 +16,10 @@ export default defineAppConfig({
     'pages/messages/index',
     'pages/reminders/index',
     'pages/settings/index',
-    'pages/help/index'
+    'pages/help/index',
+    // 讲师端页面
+    'pages/instructor/index/index',
+    'pages/instructor/certify/index'
   ],
   window: {
     backgroundTextStyle: 'light',

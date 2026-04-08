@@ -13,11 +13,16 @@ import {
   ShoppingBag,
   Star,
   CircleQuestionMark,
+  User,
+  GraduationCap,
+  ArrowLeftRight,
 } from 'lucide-react-taro';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useUserStore, UserRole } from '@/stores/user';
 
 // 菜单项类型定义
 interface MenuItem {
@@ -28,12 +33,8 @@ interface MenuItem {
 }
 
 const ProfilePage = () => {
-  const [userInfo, setUserInfo] = useState({
-    nickname: '学员用户',
-    avatar: 'https://picsum.photos/seed/avatar/200/200',
-    phone: '138****8888',
-    isLoggedIn: false,
-  });
+  const { userInfo, instructorInfo, switchRole, logout } = useUserStore();
+  const [showRoleSwitchDialog, setShowRoleSwitchDialog] = useState(false);
 
   const [stats] = useState({
     courses: 4,
@@ -61,25 +62,8 @@ const ProfilePage = () => {
   }, []);
 
   const loadUserInfo = () => {
-    try {
-      const stored = Taro.getStorageSync('userInfo');
-      console.log('加载用户信息:', stored);
-      if (stored && stored.nickname) {
-        setUserInfo({
-          nickname: stored.nickname || '学员用户',
-          avatar: stored.avatar || 'https://picsum.photos/seed/avatar/200/200',
-          phone: stored.phone || '138****8888',
-          isLoggedIn: true,
-        });
-        console.log('用户已登录');
-      } else {
-        setUserInfo((prev) => ({ ...prev, isLoggedIn: false }));
-        console.log('用户未登录');
-      }
-    } catch (e) {
-      console.error('加载用户信息失败:', e);
-      setUserInfo((prev) => ({ ...prev, isLoggedIn: false }));
-    }
+    // 数据已从 store 自动加载，无需额外处理
+    console.log('用户信息已从 store 加载');
   };
 
   const handleLogin = () => {
@@ -100,7 +84,7 @@ const ProfilePage = () => {
   };
 
   const handleMenuClick = (url: string) => {
-    if (!userInfo.isLoggedIn) {
+    if (!userInfo) {
       handleLogin();
       return;
     }
@@ -108,7 +92,7 @@ const ProfilePage = () => {
   };
 
   const handleOrderClick = (status?: string) => {
-    if (!userInfo.isLoggedIn) {
+    if (!userInfo) {
       handleLogin();
       return;
     }
@@ -118,7 +102,7 @@ const ProfilePage = () => {
   };
 
   const handleEditProfile = () => {
-    if (!userInfo.isLoggedIn) {
+    if (!userInfo) {
       handleLogin();
       return;
     }
@@ -133,16 +117,7 @@ const ProfilePage = () => {
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
-          // 清除登录状态
-          try {
-            Taro.clearStorageSync();
-          } catch (e) {
-            console.error('清除存储失败:', e);
-          }
-
-          // 立即更新状态
-          setUserInfo((prev) => ({ ...prev, isLoggedIn: false }));
-
+          logout();
           Taro.showToast({ title: '已退出登录', icon: 'success' });
         }
       },
@@ -151,14 +126,36 @@ const ProfilePage = () => {
 
   // 临时调试：强制清除存储并刷新
   const handleDebugClear = () => {
-    try {
-      Taro.clearStorageSync();
-      setUserInfo((prev) => ({ ...prev, isLoggedIn: false }));
-      Taro.showToast({ title: '已清除存储', icon: 'success' });
-      console.log('调试：已清除所有存储');
-    } catch (e) {
-      console.error('清除失败:', e);
-    }
+    logout();
+    Taro.showToast({ title: '已清除存储', icon: 'success' });
+    console.log('调试：已清除所有存储');
+  };
+
+  // 身份切换
+  const handleSwitchRole = () => {
+    if (!userInfo) return;
+
+    const currentRole = userInfo.role;
+    const newRole = currentRole === UserRole.INSTRUCTOR ? UserRole.STUDENT : UserRole.INSTRUCTOR;
+
+    Taro.showModal({
+      title: '切换身份',
+      content: `确定要切换到${newRole === UserRole.INSTRUCTOR ? '讲师' : '学员'}身份吗？`,
+      success: (res) => {
+        if (res.confirm) {
+          switchRole(newRole);
+          setShowRoleSwitchDialog(false);
+          Taro.showToast({ title: '切换成功', icon: 'success' });
+
+          // 如果切换到讲师身份，跳转到讲师工作台
+          if (newRole === UserRole.INSTRUCTOR) {
+            setTimeout(() => {
+              Taro.redirectTo({ url: '/pages/instructor/index/index' });
+            }, 1000);
+          }
+        }
+      },
+    });
   };
 
   const menuItems: MenuItem[] = [
@@ -223,15 +220,32 @@ const ProfilePage = () => {
           <Bell size={24} color="#FFFFFF" />
         </View>
 
-        {userInfo.isLoggedIn ? (
+        {userInfo ? (
           <View className="flex flex-row items-center">
             <Avatar className="w-14 h-14">
-              <AvatarImage src={userInfo.avatar} />
+              <AvatarImage src={userInfo?.avatar} />
             </Avatar>
             <View className="ml-4 flex-1">
-              <Text className="block text-lg font-semibold text-white">{userInfo.nickname}</Text>
-              <Text className="block text-sm text-white text-opacity-80">{userInfo.phone}</Text>
+              <View className="flex flex-row items-center">
+                <Text className="block text-lg font-semibold text-white">{userInfo?.nickname}</Text>
+                <View
+                  className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                    userInfo?.role === UserRole.INSTRUCTOR ? 'bg-purple-500 text-white' : 'bg-green-500 text-white'
+                  }`}
+                >
+                  {userInfo?.role === UserRole.INSTRUCTOR ? '讲师' : '学员'}
+                </View>
+              </View>
+              <Text className="block text-sm text-white text-opacity-80">{userInfo?.phone}</Text>
             </View>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-white text-orange-500 bg-white mr-2"
+              onClick={() => setShowRoleSwitchDialog(true)}
+            >
+              <ArrowLeftRight size={14} color="#FF6B35" />
+            </Button>
             <Button
               size="sm"
               variant="outline"
@@ -381,7 +395,7 @@ const ProfilePage = () => {
         </Card>
 
         {/* 退出登录 */}
-        {userInfo.isLoggedIn && (
+        {userInfo && (
           <View className="mb-4">
             <Button
               variant="outline"
@@ -410,6 +424,57 @@ const ProfilePage = () => {
           <Text className="block text-xs text-gray-400">在线课堂 v1.0.0</Text>
         </View>
       </ScrollView>
+
+      {/* 身份切换对话框 */}
+      <Dialog open={showRoleSwitchDialog} onOpenChange={setShowRoleSwitchDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>切换身份</DialogTitle>
+          </DialogHeader>
+          <View className="space-y-3 mt-4">
+            <View
+              className={`p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer ${
+                userInfo?.role === UserRole.STUDENT ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white'
+              }`}
+              onClick={handleSwitchRole}
+            >
+              <GraduationCap
+                size={32}
+                color={userInfo?.role === UserRole.STUDENT ? '#FF6B35' : '#9CA3AF'}
+              />
+              <Text
+                className={`block text-sm font-medium mt-2 ${
+                  userInfo?.role === UserRole.STUDENT ? 'text-orange-500' : 'text-gray-700'
+                }`}
+              >
+                学员身份
+              </Text>
+            </View>
+
+            <View
+              className={`p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer ${
+                userInfo?.role === UserRole.INSTRUCTOR ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white'
+              }`}
+              onClick={handleSwitchRole}
+            >
+              <User
+                size={32}
+                color={userInfo?.role === UserRole.INSTRUCTOR ? '#FF6B35' : '#9CA3AF'}
+              />
+              <Text
+                className={`block text-sm font-medium mt-2 ${
+                  userInfo?.role === UserRole.INSTRUCTOR ? 'text-orange-500' : 'text-gray-700'
+                }`}
+              >
+                讲师身份
+              </Text>
+              {instructorInfo?.status !== 'verified' && (
+                <Text className="block text-xs text-red-500 mt-1">未认证</Text>
+              )}
+            </View>
+          </View>
+        </DialogContent>
+      </Dialog>
     </View>
   );
 };

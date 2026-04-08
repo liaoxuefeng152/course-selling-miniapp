@@ -1,16 +1,18 @@
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 import Taro from '@tarojs/taro';
-import { ArrowLeft } from 'lucide-react-taro';
+import { ArrowLeft, User, GraduationCap } from 'lucide-react-taro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { useUserStore, UserRole } from '@/stores/user';
 
 const LoginPage = () => {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [countdown, setCountdown] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.STUDENT);
 
   const handleSendCode = () => {
     if (!phone) {
@@ -56,19 +58,29 @@ const LoginPage = () => {
       // 模拟登录请求
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // 保存用户信息
+      // 根据选择的角色创建用户信息
       const userInfo = {
-        nickname: '学员用户',
-        avatar: 'https://picsum.photos/seed/avatar/200/200',
+        id: Date.now().toString(),
+        nickname: selectedRole === UserRole.INSTRUCTOR ? '讲师用户' : '学员用户',
+        avatar: selectedRole === UserRole.INSTRUCTOR
+          ? 'https://picsum.photos/seed/instructor/200/200'
+          : 'https://picsum.photos/seed/student/200/200',
         phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+        role: selectedRole,
       };
 
-      Taro.setStorageSync('userInfo', userInfo);
+      // 保存用户信息到 store
+      useUserStore.getState().login(userInfo, 'mock-token-' + Date.now());
 
       Taro.showToast({ title: '登录成功', icon: 'success' });
 
       setTimeout(() => {
-        Taro.navigateBack();
+        // 如果选择讲师角色，跳转到讲师工作台
+        if (selectedRole === UserRole.INSTRUCTOR) {
+          Taro.redirectTo({ url: '/pages/instructor/index/index' });
+        } else {
+          Taro.navigateBack();
+        }
       }, 1000);
     } catch (error) {
       Taro.showToast({ title: '登录失败，请重试', icon: 'none' });
@@ -97,6 +109,54 @@ const LoginPage = () => {
 
         <Card>
           <CardContent className="p-6">
+            {/* 角色选择 */}
+            <View className="mb-6">
+              <Text className="block text-sm font-medium text-gray-700 mb-2">选择身份</Text>
+              <View className="grid grid-cols-2 gap-3">
+                <View
+                  className={`p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer ${
+                    selectedRole === UserRole.STUDENT
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 bg-white'
+                  }`}
+                  onClick={() => setSelectedRole(UserRole.STUDENT)}
+                >
+                  <GraduationCap
+                    size={32}
+                    color={selectedRole === UserRole.STUDENT ? '#FF6B35' : '#9CA3AF'}
+                  />
+                  <Text
+                    className={`block text-sm font-medium mt-2 ${
+                      selectedRole === UserRole.STUDENT ? 'text-orange-500' : 'text-gray-700'
+                    }`}
+                  >
+                    我是学员
+                  </Text>
+                </View>
+
+                <View
+                  className={`p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer ${
+                    selectedRole === UserRole.INSTRUCTOR
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 bg-white'
+                  }`}
+                  onClick={() => setSelectedRole(UserRole.INSTRUCTOR)}
+                >
+                  <User
+                    size={32}
+                    color={selectedRole === UserRole.INSTRUCTOR ? '#FF6B35' : '#9CA3AF'}
+                  />
+                  <Text
+                    className={`block text-sm font-medium mt-2 ${
+                      selectedRole === UserRole.INSTRUCTOR ? 'text-orange-500' : 'text-gray-700'
+                    }`}
+                  >
+                    我是讲师
+                  </Text>
+                </View>
+              </View>
+            </View>
+
             {/* 手机号输入 */}
             <View className="mb-6">
               <Text className="block text-sm font-medium text-gray-700 mb-2">手机号</Text>
