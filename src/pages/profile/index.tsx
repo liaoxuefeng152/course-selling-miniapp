@@ -66,6 +66,43 @@ const ProfilePage = () => {
     });
   };
 
+  const handleEditProfile = () => {
+    if (!userInfo.isLoggedIn) {
+      handleLogin();
+      return;
+    }
+    Taro.navigateTo({
+      url: '/pages/profile/edit/index',
+    });
+  };
+
+  const handleLogout = () => {
+    Taro.showModal({
+      title: '提示',
+      content: '确定要退出登录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          // 清除登录状态
+          try {
+            Taro.clearStorageSync();
+          } catch (e) {
+            console.error('清除存储失败:', e);
+          }
+          
+          Taro.showToast({ title: '已退出登录', icon: 'success' });
+          
+          // 重新加载页面
+          setTimeout(() => {
+            Taro.startPullDownRefresh();
+            setTimeout(() => {
+              Taro.stopPullDownRefresh();
+            }, 1000);
+          }, 500);
+        }
+      },
+    });
+  };
+
   const menuItems: MenuItem[] = [
     {
       icon: <ShoppingBag size={20} color="#FF6B35" />,
@@ -141,7 +178,7 @@ const ProfilePage = () => {
               size="sm"
               variant="outline"
               className="border-white text-orange-500 bg-white"
-              onClick={() => handleMenuClick('/pages/profile/edit')}
+              onClick={handleEditProfile}
             >
               编辑资料
             </Button>
@@ -291,6 +328,7 @@ const ProfilePage = () => {
             <Button
               variant="outline"
               className="w-full border-gray-200 text-gray-600"
+              onClick={handleLogout}
             >
               <LogOut size={16} color="#6B7280" />
               <Text className="ml-2">退出登录</Text>

@@ -4,6 +4,7 @@ export default defineAppConfig({
     'pages/live/index',
     'pages/study/index',
     'pages/profile/index',
+    'pages/profile/edit/index',
     'pages/course/index',
     'pages/course-list/index',
     'pages/order/index',
