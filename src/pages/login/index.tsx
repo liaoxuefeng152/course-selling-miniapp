@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUserStore, UserRole } from '@/stores/user';
+import { Network } from '@/network';
 
 const LoginPage = () => {
   const [phone, setPhone] = useState('');
@@ -14,7 +15,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.STUDENT);
 
-  const handleSendCode = () => {
+  const handleSendCode = async () => {
     if (!phone) {
       Taro.showToast({ title: '请输入手机号', icon: 'none' });
       return;
@@ -38,7 +39,19 @@ const LoginPage = () => {
       });
     }, 1000);
 
-    Taro.showToast({ title: '验证码已发送', icon: 'success' });
+    try {
+      // 调用后端接口发送验证码
+      await Network.request({
+        url: '/api/users/send-code',
+        method: 'POST',
+        data: { phone },
+      });
+
+      Taro.showToast({ title: '验证码已发送', icon: 'success' });
+    } catch (error) {
+      console.error('发送验证码失败:', error);
+      Taro.showToast({ title: '发送失败，请重试', icon: 'none' });
+    }
   };
 
   const handleLogin = async () => {
@@ -55,34 +68,36 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      // 模拟登录请求
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // 调用后端接口登录
+      const res = await Network.request({
+        url: '/api/users/login',
+        method: 'POST',
+        data: { phone, code, role: selectedRole },
+      });
 
-      // 根据选择的角色创建用户信息
-      const userInfo = {
-        id: Date.now().toString(),
-        nickname: selectedRole === UserRole.INSTRUCTOR ? '讲师用户' : '学员用户',
-        avatar: selectedRole === UserRole.INSTRUCTOR
-          ? 'https://picsum.photos/seed/instructor/200/200'
-          : 'https://picsum.photos/seed/student/200/200',
-        phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
-        role: selectedRole,
-      };
+      console.log('登录响应:', res.data);
 
-      // 保存用户信息到 store
-      useUserStore.getState().login(userInfo, 'mock-token-' + Date.now());
+      if (res.data?.code === 200 && res.data?.data) {
+        const { user, token } = res.data.data;
 
-      Taro.showToast({ title: '登录成功', icon: 'success' });
+        // 保存用户信息到 store
+        useUserStore.getState().login(user, token);
 
-      setTimeout(() => {
-        // 如果选择讲师角色，跳转到讲师工作台
-        if (selectedRole === UserRole.INSTRUCTOR) {
-          Taro.redirectTo({ url: '/pages/instructor/index/index' });
-        } else {
-          Taro.navigateBack();
-        }
-      }, 1000);
+        Taro.showToast({ title: '登录成功', icon: 'success' });
+
+        setTimeout(() => {
+          // 如果选择讲师角色，跳转到讲师工作台
+          if (selectedRole === UserRole.INSTRUCTOR) {
+            Taro.redirectTo({ url: '/pages/instructor/index/index' });
+          } else {
+            Taro.navigateBack();
+          }
+        }, 1000);
+      } else {
+        Taro.showToast({ title: res.data?.msg || '登录失败', icon: 'none' });
+      }
     } catch (error) {
+      console.error('登录失败:', error);
       Taro.showToast({ title: '登录失败，请重试', icon: 'none' });
     } finally {
       setLoading(false);

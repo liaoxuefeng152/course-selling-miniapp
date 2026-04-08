@@ -16,21 +16,43 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useUserStore, InstructorStatus } from '@/stores/user'
+import { Network } from '@/network'
 
 const InstructorHomePage = () => {
   const { userInfo, instructorInfo, instructorStats, setInstructorStats } = useUserStore()
 
   useEffect(() => {
-    // 模拟加载讲师统计数据
-    const mockStats = {
-      todaySales: 12580,
-      totalSales: 45890,
-      courseCount: 12,
-      liveCount: 8,
-      studentCount: 3256,
+    const loadStats = async () => {
+      if (!userInfo) return
+
+      try {
+        const res = await Network.request({
+          url: '/api/instructor/stats',
+          method: 'GET',
+          data: { userId: userInfo.id },
+        })
+
+        console.log('讲师统计数据响应:', res.data)
+
+        if (res.data?.code === 200 && res.data?.data) {
+          setInstructorStats(res.data.data)
+        }
+      } catch (error) {
+        console.error('加载统计数据失败:', error)
+        // 如果接口调用失败，使用模拟数据
+        const mockStats = {
+          todaySales: 12580,
+          totalSales: 45890,
+          courseCount: 12,
+          liveCount: 8,
+          studentCount: 3256,
+        }
+        setInstructorStats(mockStats)
+      }
     }
-    setInstructorStats(mockStats)
-  }, [setInstructorStats])
+
+    loadStats()
+  }, [userInfo, setInstructorStats])
 
   // 未认证提示
   if (!instructorInfo || instructorInfo.status !== InstructorStatus.VERIFIED) {

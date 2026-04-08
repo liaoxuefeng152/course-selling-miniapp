@@ -19,7 +19,9 @@ export default defineAppConfig({
     'pages/help/index',
     // 讲师端页面
     'pages/instructor/index/index',
-    'pages/instructor/certify/index'
+    'pages/instructor/certify/index',
+    'pages/instructor/courses/index',
+    'pages/instructor/courses/edit/index'
   ],
   window: {
     backgroundTextStyle: 'light',

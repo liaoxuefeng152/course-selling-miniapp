@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Input as UIInput } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useUserStore, CertifyType } from '@/stores/user'
+import { useUserStore } from '@/stores/user'
+import { Network } from '@/network'
 
 const InstructorCertifyPage = () => {
+  const { userInfo } = useUserStore()
   const [activeTab, setActiveTab] = useState<'personal' | 'organization'>('personal')
   const [loading, setLoading] = useState(false)
 
@@ -107,32 +109,33 @@ const InstructorCertifyPage = () => {
     setLoading(true)
 
     try {
-      // 模拟提交认证
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // 保存讲师认证信息
-      useUserStore.getState().setInstructorInfo({
-        userId: useUserStore.getState().userInfo?.id || '',
-        status: 'pending' as any,
-        certifyType: activeTab === 'personal' ? CertifyType.PERSONAL : CertifyType.ORGANIZATION,
-        realName: activeTab === 'personal' ? (form as any).realName : undefined,
-        idCard: activeTab === 'personal' ? (form as any).idCard : undefined,
-        idCardFront: activeTab === 'personal' ? (form as any).idCardFront : undefined,
-        idCardBack: activeTab === 'personal' ? (form as any).idCardBack : undefined,
-        organizationName: activeTab === 'organization' ? (form as any).organizationName : undefined,
-        businessLicense: activeTab === 'organization' ? (form as any).businessLicense : undefined,
-        legalPersonIdCard: activeTab === 'organization' ? (form as any).legalPersonIdCard : undefined,
-        contactPhone: (form as any).contactPhone,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+      // 调用后端接口提交认证
+      const res = await Network.request({
+        url: '/api/instructor/certify',
+        method: 'POST',
+        data: {
+          userId: userInfo?.id,
+          certifyType: activeTab === 'personal' ? 'personal' : 'organization',
+          ...(form as any),
+        },
       })
 
-      Taro.showToast({ title: '提交成功，等待审核', icon: 'success' })
+      console.log('提交认证响应:', res.data)
 
-      setTimeout(() => {
-        Taro.navigateBack()
-      }, 1500)
+      if (res.data?.code === 200 && res.data?.data) {
+        // 保存讲师认证信息到 store
+        useUserStore.getState().setInstructorInfo(res.data.data)
+
+        Taro.showToast({ title: '提交成功，等待审核', icon: 'success' })
+
+        setTimeout(() => {
+          Taro.navigateBack()
+        }, 1500)
+      } else {
+        Taro.showToast({ title: res.data?.msg || '提交失败', icon: 'none' })
+      }
     } catch (error) {
+      console.error('提交认证失败:', error)
       Taro.showToast({ title: '提交失败，请重试', icon: 'none' })
     } finally {
       setLoading(false)
