@@ -9,7 +9,6 @@ import {
   MessageCircle,
   ChevronRight,
   LogOut,
-  ShoppingBag,
   Star,
   CircleQuestionMark,
   User,
@@ -168,12 +167,6 @@ const ProfilePage = () => {
   };
 
   const menuItems: MenuItem[] = [
-    {
-      icon: <ShoppingBag size={20} color="#FF6B35" />,
-      label: '我的订单',
-      badge: 2,
-      onClick: () => handleOrderClick(),
-    },
     {
       icon: <Heart size={20} color="#EC4899" />,
       label: '我的收藏',
