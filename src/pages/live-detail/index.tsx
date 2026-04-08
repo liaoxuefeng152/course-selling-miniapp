@@ -1,6 +1,6 @@
 import { View, Text, Image, ScrollView, Video } from '@tarojs/components';
 import { useState, useEffect, useRef } from 'react';
-import Taro, { useRouter } from '@tarojs/taro';
+import Taro, { useRouter, useShareAppMessage, useShareTimeline } from '@tarojs/taro';
 import {
   Heart,
   Share2,
@@ -73,10 +73,17 @@ const LiveDetailPage = () => {
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
 
+  // 图片加载失败状态
+  const [coverLoadError, setCoverLoadError] = useState(false);
+  const [teacherAvatarLoadError, setTeacherAvatarLoadError] = useState(false);
+
   const scrollViewRef = useRef<any>(null);
   const videoRef = useRef<any>(null);
 
   useEffect(() => {
+    // 重置图片加载状态
+    setCoverLoadError(false);
+    setTeacherAvatarLoadError(false);
     fetchLiveDetail();
     fetchComments();
   }, [id]);
@@ -234,10 +241,52 @@ const LiveDetailPage = () => {
   };
 
   const handleShare = () => {
-    Taro.showShareMenu({
-      withShareTicket: true,
-    });
+    // 检测是否在小程序环境
+    const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP;
+
+    if (isWeapp) {
+      // 小程序环境：使用分享面板
+      Taro.showShareMenu({
+        withShareTicket: true,
+        showShareItems: ['shareAppMessage', 'shareTimeline'],
+      });
+    } else {
+      // H5环境：复制链接
+      Taro.setClipboardData({
+        data: `${window.location.origin}/pages/live-detail/index?id=${live?.id}`,
+        success: () => {
+          Taro.showToast({
+            title: '链接已复制，可分享给好友',
+            icon: 'success',
+          });
+        },
+        fail: () => {
+          Taro.showToast({
+            title: '复制失败',
+            icon: 'none',
+          });
+        },
+      });
+    }
   };
+
+  // 添加分享配置（小程序）
+  useShareAppMessage(() => {
+    if (!live) return {};
+    return {
+      title: live.title,
+      path: `/pages/live-detail/index?id=${live.id}`,
+      imageUrl: live.cover,
+    };
+  });
+
+  useShareTimeline(() => {
+    if (!live) return {};
+    return {
+      title: live.title,
+      imageUrl: live.cover,
+    };
+  });
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -427,8 +476,9 @@ const LiveDetailPage = () => {
           <View className="w-full h-full relative">
             <Image
               className="w-full h-full"
-              src={live.cover}
+              src={coverLoadError ? 'https://via.placeholder.com/800x450/FF6B35/FFFFFF?text=Live' : live.cover}
               mode="aspectFill"
+              onError={() => setCoverLoadError(true)}
             />
             <View className="absolute top-3 left-3 bg-red-500 px-2 py-1 rounded">
               <View className="flex flex-row items-center gap-1">
@@ -444,8 +494,9 @@ const LiveDetailPage = () => {
           <View className="w-full h-full relative">
             <Image
               className="w-full h-full opacity-50"
-              src={live.cover}
+              src={coverLoadError ? 'https://via.placeholder.com/800x450/FF6B35/FFFFFF?text=Upcoming' : live.cover}
               mode="aspectFill"
+              onError={() => setCoverLoadError(true)}
             />
             <View className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50">
               <Badge variant="secondary" className="bg-amber-500 text-white mb-2 px-3 py-1">
@@ -578,7 +629,10 @@ const LiveDetailPage = () => {
         <View className="flex flex-row items-center justify-between">
           <View className="flex flex-row items-center flex-1">
             <Avatar className="w-12 h-12">
-              <AvatarImage src={live.teacherAvatar} />
+              <AvatarImage
+                src={teacherAvatarLoadError ? '' : live.teacherAvatar}
+                onError={() => setTeacherAvatarLoadError(true)}
+              />
             </Avatar>
             <View className="ml-3 flex-1">
               <Text className="block text-sm font-medium text-gray-800">{live.teacher}</Text>
@@ -621,8 +675,14 @@ const LiveDetailPage = () => {
               </Button>
             )}
 
-            <Button variant="outline" size="icon" className="border-gray-300" onClick={handleShare}>
-              <Share2 size={18} color="#9CA3AF" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gray-300 flex flex-row items-center gap-1"
+              onClick={handleShare}
+            >
+              <Share2 size={16} color="#9CA3AF" />
+              <Text className="text-gray-500 text-xs">分享</Text>
             </Button>
           </View>
         </View>
@@ -649,7 +709,7 @@ const LiveDetailPage = () => {
             {comments.map((comment) => (
               <View key={comment.id} className="flex flex-row items-start">
                 <Avatar className="w-10 h-10 flex-shrink-0">
-                  <AvatarImage src={comment.userAvatar} />
+                  <AvatarImage src={comment.userAvatar} onError={() => {}} />
                 </Avatar>
                 <View className="ml-3 flex-1">
                   <View className="flex flex-row items-center mb-1">
@@ -683,6 +743,7 @@ const LiveDetailPage = () => {
                       className="w-20 h-20 rounded-lg"
                       src={course.cover}
                       mode="aspectFill"
+                      onError={() => {}}
                     />
                     <View className="ml-3 flex-1 flex flex-col justify-between">
                       <View>
