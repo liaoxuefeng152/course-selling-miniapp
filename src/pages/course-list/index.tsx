@@ -52,7 +52,7 @@ const CourseListPage = () => {
 
   useEffect(() => {
     fetchCourses();
-  }, [sortType, categoryId]);
+  }, [sortType, categoryId, searchValue]);
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -189,6 +189,16 @@ const CourseListPage = () => {
         sorted = sorted.filter((_, index) => index % 2 === categoryId % 2);
       }
 
+      // 根据搜索关键词筛选
+      if (searchValue.trim()) {
+        const keyword = searchValue.trim().toLowerCase();
+        sorted = sorted.filter((course) =>
+          course.title.toLowerCase().includes(keyword) ||
+          course.teacher.toLowerCase().includes(keyword) ||
+          course.tags.some((tag) => tag.toLowerCase().includes(keyword))
+        );
+      }
+
       setCourses(sorted);
     } catch (error) {
       console.error('获取课程列表失败:', error);
@@ -198,11 +208,12 @@ const CourseListPage = () => {
   };
 
   const handleSearch = () => {
-    if (searchValue.trim()) {
-      Taro.navigateTo({
-        url: `/pages/course-list/index?keyword=${encodeURIComponent(searchValue)}`,
-      });
+    if (!searchValue.trim()) {
+      Taro.showToast({ title: '请输入搜索关键词', icon: 'none' });
+      return;
     }
+    // 搜索功能会自动触发，因为 searchValue 在 useEffect 依赖项中
+    fetchCourses();
   };
 
   const handleCourseClick = (courseId: number) => {
@@ -345,7 +356,7 @@ const CourseListPage = () => {
       {/* 结果统计 */}
       <View className="px-4 py-2">
         <Text className="block text-sm text-gray-500">
-          共 {courses.length} 个课程
+          {searchValue.trim() ? `搜索 "${searchValue}" 共找到 ${courses.length} 个课程` : `共 ${courses.length} 个课程`}
         </Text>
       </View>
 

@@ -176,14 +176,6 @@ const IndexPage = () => {
     }
   };
 
-  const handleSearch = () => {
-    if (searchValue.trim()) {
-      Taro.navigateTo({
-        url: `/pages/course-list/index?keyword=${encodeURIComponent(searchValue)}`,
-      });
-    }
-  };
-
   const handleCourseClick = (courseId: number) => {
     Taro.navigateTo({
       url: `/pages/course/index?id=${courseId}`,
@@ -199,6 +191,18 @@ const IndexPage = () => {
   const handleLiveClick = (_liveId: number) => {
     Taro.switchTab({
       url: '/pages/live/index',
+    });
+  };
+
+  const handleSearch = () => {
+    if (!searchValue.trim()) {
+      Taro.showToast({ title: '请输入搜索关键词', icon: 'none' });
+      return;
+    }
+
+    // 跳转到课程列表页面，传递搜索关键词
+    Taro.navigateTo({
+      url: `/pages/course-list/index?keyword=${encodeURIComponent(searchValue.trim())}`,
     });
   };
 
