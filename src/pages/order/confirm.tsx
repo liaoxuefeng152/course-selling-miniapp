@@ -5,11 +5,13 @@ import { Check } from 'lucide-react-taro';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
+import { Network } from '@/network';
 
 type PaymentMethod = 'wechat' | 'alipay';
 
 const OrderConfirmPage = () => {
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('wechat');
+  const [loading, setLoading] = useState(false);
 
   // 模拟课程数据
   const course = {
@@ -22,20 +24,128 @@ const OrderConfirmPage = () => {
     discountPrice: 299,
   };
 
-  const handlePayment = () => {
-    const paymentMethodName = selectedPayment === 'wechat' ? '微信支付' : '支付宝';
-    Taro.showModal({
-      title: '提示',
-      content: `已选择${paymentMethodName}，模拟支付功能开发中，实际使用时需要接入对应支付方式`,
-      confirmText: '知道了',
-      showCancel: false,
-      success: () => {
-        // 支付成功后跳转到订单列表
-        Taro.navigateTo({
-          url: '/pages/order/index?status=paid',
+  const handlePayment = async () => {
+    setLoading(true);
+
+    try {
+      // 1. 调用后端接口创建订单并获取支付参数
+      console.log('请求支付接口:', {
+        courseId: course.id,
+        paymentMethod: selectedPayment,
+        amount: course.discountPrice,
+      });
+
+      const res = await Network.request({
+        url: '/api/orders/create',
+        method: 'POST',
+        data: {
+          courseId: course.id,
+          paymentMethod: selectedPayment,
+          amount: course.discountPrice,
+        },
+      });
+
+      console.log('创建订单响应:', res.data);
+
+      // 2. 检查响应
+      if (res.data?.code === 200 && res.data?.data) {
+        const { orderId, paymentParams } = res.data.data;
+
+        // 3. 调用微信支付（小程序端）
+        if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
+          await Taro.requestPayment({
+            timeStamp: paymentParams.timeStamp,
+            nonceStr: paymentParams.nonceStr,
+            package: paymentParams.package,
+            signType: paymentParams.signType || 'MD5',
+            paySign: paymentParams.paySign,
+            success: () => {
+              console.log('支付成功');
+              Taro.showToast({
+                title: '支付成功',
+                icon: 'success',
+                duration: 2000,
+              });
+
+              // 延迟跳转到订单列表
+              setTimeout(() => {
+                Taro.redirectTo({
+                  url: `/pages/order/index?status=paid&orderId=${orderId}`,
+                });
+              }, 2000);
+            },
+            fail: (err) => {
+              console.error('支付失败:', err);
+              if (err.errMsg.includes('requestPayment:fail cancel')) {
+                Taro.showToast({
+                  title: '取消支付',
+                  icon: 'none',
+                });
+              } else {
+                Taro.showToast({
+                  title: '支付失败',
+                  icon: 'none',
+                });
+              }
+            },
+          });
+        } else {
+          // H5 端显示模拟支付
+          Taro.showModal({
+            title: '支付确认',
+            content: `订单金额：¥${course.discountPrice}\n支付方式：${selectedPayment === 'wechat' ? '微信支付' : '支付宝'}\n\n确定要支付吗？`,
+            success: (modalRes) => {
+              if (modalRes.confirm) {
+                Taro.showToast({
+                  title: '支付成功',
+                  icon: 'success',
+                  duration: 2000,
+                });
+                setTimeout(() => {
+                  Taro.redirectTo({
+                    url: `/pages/order/index?status=paid&orderId=${orderId}`,
+                  });
+                }, 2000);
+              }
+            },
+          });
+        }
+      } else {
+        throw new Error(res.data?.msg || '创建订单失败');
+      }
+    } catch (error: any) {
+      console.error('支付流程错误:', error);
+
+      // 判断是否是网络错误或后端未实现
+      if (error.message?.includes('Network') || error.message?.includes('404')) {
+        // 模拟支付成功（开发环境）
+        Taro.showModal({
+          title: '开发环境提示',
+          content: '后端接口未实现，是否模拟支付成功？',
+          success: (res) => {
+            if (res.confirm) {
+              Taro.showToast({
+                title: '支付成功',
+                icon: 'success',
+                duration: 2000,
+              });
+              setTimeout(() => {
+                Taro.redirectTo({
+                  url: '/pages/order/index?status=paid',
+                });
+              }, 2000);
+            }
+          },
         });
-      },
-    });
+      } else {
+        Taro.showToast({
+          title: error.message || '支付失败，请重试',
+          icon: 'none',
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePaymentSelect = (method: PaymentMethod) => {
@@ -169,8 +279,12 @@ const OrderConfirmPage = () => {
           <Text className="block text-sm text-gray-500">实付款：</Text>
           <Text className="block text-2xl font-bold text-orange-500">¥{course.discountPrice}</Text>
         </View>
-        <Button className="bg-orange-500 text-white px-8" onClick={handlePayment}>
-          立即支付
+        <Button
+          className="bg-orange-500 text-white px-8"
+          onClick={handlePayment}
+          disabled={loading}
+        >
+          {loading ? '支付中...' : '立即支付'}
         </Button>
       </View>
     </View>
