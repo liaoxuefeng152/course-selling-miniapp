@@ -15,6 +15,8 @@ import {
   GraduationCap,
   ArrowLeftRight,
   BookOpen,
+  MessageSquare,
+  Info,
 } from 'lucide-react-taro';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
@@ -208,9 +210,19 @@ const ProfilePage = () => {
       onClick: () => handleMenuClick('/pages/settings/index'),
     },
     {
+      icon: <MessageSquare size={20} color="#6B7280" />,
+      label: '意见反馈',
+      onClick: () => handleMenuClick('/pages/feedback/index'),
+    },
+    {
       icon: <CircleQuestionMark size={20} color="#6B7280" />,
-      label: '帮助与反馈',
+      label: '帮助中心',
       onClick: () => handleMenuClick('/pages/help/index'),
+    },
+    {
+      icon: <Info size={20} color="#6B7280" />,
+      label: '关于我们',
+      onClick: () => handleMenuClick('/pages/about/index'),
     },
   ];
 

@@ -22,11 +22,16 @@ export default defineAppConfig({
     'pages/help/index',
     'pages/refund/index',
     'pages/my-courses/index',
+    'pages/feedback/index',
+    'pages/about/index',
     // 讲师端页面
     'pages/instructor/index/index',
     'pages/instructor/certify/index',
     'pages/instructor/courses/index',
-    'pages/instructor/courses/edit/index'
+    'pages/instructor/courses/edit/index',
+    'pages/instructor/live/index',
+    'pages/instructor/live/edit/index',
+    'pages/instructor/live/dashboard/index'
   ],
   window: {
     backgroundTextStyle: 'light',

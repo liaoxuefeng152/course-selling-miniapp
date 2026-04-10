@@ -286,6 +286,52 @@ const InstructorHomePage = () => {
           </Card>
         </View>
 
+        {/* 功能入口 */}
+        <View className="px-4 mt-4">
+          <Card>
+            <CardContent className="p-4">
+              <Text className="block text-base font-semibold text-gray-800 mb-4">功能管理</Text>
+              <View className="grid grid-cols-2 gap-3">
+                <View
+                  className="bg-gray-50 rounded-xl p-4 flex flex-col items-center"
+                  onClick={() => Taro.navigateTo({ url: '/pages/instructor/courses/index' })}
+                >
+                  <BookOpen size={28} color="#FF6B35" />
+                  <Text className="block text-sm text-gray-800 mt-2">课程管理</Text>
+                  <Text className="block text-xs text-gray-500 mt-1">管理我的课程</Text>
+                </View>
+
+                <View
+                  className="bg-gray-50 rounded-xl p-4 flex flex-col items-center"
+                  onClick={() => Taro.navigateTo({ url: '/pages/instructor/live/index' })}
+                >
+                  <Video size={28} color="#FF6B35" />
+                  <Text className="block text-sm text-gray-800 mt-2">直播管理</Text>
+                  <Text className="block text-xs text-gray-500 mt-1">创建和管理直播</Text>
+                </View>
+
+                <View
+                  className="bg-gray-50 rounded-xl p-4 flex flex-col items-center"
+                  onClick={() => Taro.showToast({ title: '功能开发中', icon: 'none' })}
+                >
+                  <Users size={28} color="#FF6B35" />
+                  <Text className="block text-sm text-gray-800 mt-2">学员管理</Text>
+                  <Text className="block text-xs text-gray-500 mt-1">查看学员列表</Text>
+                </View>
+
+                <View
+                  className="bg-gray-50 rounded-xl p-4 flex flex-col items-center"
+                  onClick={() => Taro.navigateTo({ url: '/pages/order/index' })}
+                >
+                  <DollarSign size={28} color="#FF6B35" />
+                  <Text className="block text-sm text-gray-800 mt-2">订单管理</Text>
+                  <Text className="block text-xs text-gray-500 mt-1">查看订单详情</Text>
+                </View>
+              </View>
+            </CardContent>
+          </Card>
+        </View>
+
         {/* 数据统计 */}
         <View className="px-4 mt-4">
           <Card>
