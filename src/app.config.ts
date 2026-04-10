@@ -34,7 +34,8 @@ export default defineAppConfig({
     'pages/instructor/notifications/index',
     'pages/instructor/courses-list/index',
     'pages/instructor/students-list/index',
-    'pages/instructor/orders-list/index'
+    'pages/instructor/orders-list/index',
+    'pages/instructor/withdraw/index'
   ],
   window: {
     backgroundTextStyle: 'light',
