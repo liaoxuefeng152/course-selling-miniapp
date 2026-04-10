@@ -225,7 +225,15 @@ const InstructorHomePage = () => {
             <Text className="block text-lg font-semibold text-white">讲师工作台</Text>
             <Badge className="ml-2 bg-white text-orange-500 border-0">已认证</Badge>
           </View>
-          <Bell size={24} color="#FFFFFF" />
+          <View
+            className="relative"
+            onClick={() => Taro.navigateTo({ url: '/pages/instructor/notifications/index' })}
+          >
+            <Bell size={24} color="#FFFFFF" />
+            <View className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+              <Text className="text-xs text-white">3</Text>
+            </View>
+          </View>
         </View>
 
         {/* 讲师信息 */}
@@ -286,19 +294,19 @@ const InstructorHomePage = () => {
           </Card>
         </View>
 
-        {/* 功能入口 */}
+        {/* 快速查看 */}
         <View className="px-4 mt-4">
           <Card>
             <CardContent className="p-4">
-              <Text className="block text-base font-semibold text-gray-800 mb-4">功能管理</Text>
+              <Text className="block text-base font-semibold text-gray-800 mb-4">快速查看</Text>
               <View className="grid grid-cols-2 gap-3">
                 <View
                   className="bg-gray-50 rounded-xl p-4 flex flex-col items-center"
-                  onClick={() => Taro.navigateTo({ url: '/pages/instructor/courses/index' })}
+                  onClick={() => Taro.navigateTo({ url: '/pages/instructor/courses-list/index' })}
                 >
                   <BookOpen size={28} color="#FF6B35" />
-                  <Text className="block text-sm text-gray-800 mt-2">课程管理</Text>
-                  <Text className="block text-xs text-gray-500 mt-1">管理我的课程</Text>
+                  <Text className="block text-sm text-gray-800 mt-2">我的课程</Text>
+                  <Text className="block text-xs text-gray-500 mt-1">查看课程列表</Text>
                 </View>
 
                 <View
@@ -306,25 +314,25 @@ const InstructorHomePage = () => {
                   onClick={() => Taro.navigateTo({ url: '/pages/instructor/live/index' })}
                 >
                   <Video size={28} color="#FF6B35" />
-                  <Text className="block text-sm text-gray-800 mt-2">直播管理</Text>
-                  <Text className="block text-xs text-gray-500 mt-1">创建和管理直播</Text>
+                  <Text className="block text-sm text-gray-800 mt-2">我的直播</Text>
+                  <Text className="block text-xs text-gray-500 mt-1">查看直播列表</Text>
                 </View>
 
                 <View
                   className="bg-gray-50 rounded-xl p-4 flex flex-col items-center"
-                  onClick={() => Taro.showToast({ title: '功能开发中', icon: 'none' })}
+                  onClick={() => Taro.navigateTo({ url: '/pages/instructor/students-list/index' })}
                 >
                   <Users size={28} color="#FF6B35" />
-                  <Text className="block text-sm text-gray-800 mt-2">学员管理</Text>
-                  <Text className="block text-xs text-gray-500 mt-1">查看学员列表</Text>
+                  <Text className="block text-sm text-gray-800 mt-2">学员列表</Text>
+                  <Text className="block text-xs text-gray-500 mt-1">查看学员信息</Text>
                 </View>
 
                 <View
                   className="bg-gray-50 rounded-xl p-4 flex flex-col items-center"
-                  onClick={() => Taro.navigateTo({ url: '/pages/order/index' })}
+                  onClick={() => Taro.navigateTo({ url: '/pages/instructor/orders-list/index' })}
                 >
                   <DollarSign size={28} color="#FF6B35" />
-                  <Text className="block text-sm text-gray-800 mt-2">订单管理</Text>
+                  <Text className="block text-sm text-gray-800 mt-2">订单列表</Text>
                   <Text className="block text-xs text-gray-500 mt-1">查看订单详情</Text>
                 </View>
               </View>

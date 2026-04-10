@@ -30,8 +30,11 @@ export default defineAppConfig({
     'pages/instructor/courses/index',
     'pages/instructor/courses/edit/index',
     'pages/instructor/live/index',
-    'pages/instructor/live/edit/index',
-    'pages/instructor/live/dashboard/index'
+    'pages/instructor/live/dashboard/index',
+    'pages/instructor/notifications/index',
+    'pages/instructor/courses-list/index',
+    'pages/instructor/students-list/index',
+    'pages/instructor/orders-list/index'
   ],
   window: {
     backgroundTextStyle: 'light',
