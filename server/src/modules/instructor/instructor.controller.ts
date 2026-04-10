@@ -84,4 +84,43 @@ export class InstructorController {
       data: result,
     };
   }
+
+  /**
+   * 申请提现（讲师端）
+   * POST /api/instructor/withdraw/apply
+   */
+  @Post('withdraw/apply')
+  @HttpCode(HttpStatus.OK)
+  async applyWithdraw(@Body() body: {
+    amount: number;
+    bankName: string;
+    bankAccount: string;
+    accountName: string;
+  }) {
+    const result = await this.instructorService.applyWithdraw(body);
+    return {
+      code: 200,
+      msg: '提现申请已提交',
+      data: result,
+    };
+  }
+
+  /**
+   * 获取提现记录列表（讲师端）
+   * GET /api/instructor/withdraw/list
+   */
+  @Get('withdraw/list')
+  async getWithdrawList(@Query() query: {
+    userId: string;
+    status?: string;
+    page?: number;
+    pageSize?: number;
+  }) {
+    const result = await this.instructorService.getWithdrawList(query);
+    return {
+      code: 200,
+      msg: '获取成功',
+      data: result,
+    };
+  }
 }

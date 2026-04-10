@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { ArrowLeft, DollarSign, Calendar, History } from 'lucide-react-taro';
 import { Button } from '@/components/ui/button';
@@ -9,10 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Network } from '@/network';
 
 interface WithdrawRecord {
-  id: number;
+  id: string;
   amount: number;
   bankAccount: string;
   bankName: string;
+  accountName: string;
   status: 'pending' | 'processing' | 'success' | 'failed';
   applyTime: string;
   completeTime?: string;
@@ -27,34 +28,41 @@ const WithdrawPage = () => {
   const accountName = '张三';
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const [records, setRecords] = useState<WithdrawRecord[]>([]);
 
-  const [records] = useState<WithdrawRecord[]>([
-    {
-      id: 1,
-      amount: 5000,
-      bankAccount: '6222 **** **** 1234',
-      bankName: '中国工商银行',
-      status: 'success',
-      applyTime: '2024-04-08 14:30:00',
-      completeTime: '2024-04-08 16:45:00',
-    },
-    {
-      id: 2,
-      amount: 3000,
-      bankAccount: '6222 **** **** 1234',
-      bankName: '中国工商银行',
-      status: 'processing',
-      applyTime: '2024-04-10 09:15:00',
-    },
-    {
-      id: 3,
-      amount: 2000,
-      bankAccount: '6222 **** **** 1234',
-      bankName: '中国工商银行',
-      status: 'failed',
-      applyTime: '2024-04-05 11:20:00',
-    },
-  ]);
+  // 加载提现记录
+  useEffect(() => {
+    loadWithdrawRecords();
+  }, [activeTab]);
+
+  const loadWithdrawRecords = async () => {
+    try {
+      const res = await Network.request({
+        url: '/api/instructor/withdraw/list',
+        method: 'GET',
+        data: {
+          userId: '1', // TODO: 从用户信息获取
+          status: activeTab === 'all' ? undefined : activeTab,
+          page: 1,
+          pageSize: 20,
+        },
+      });
+
+      console.log('提现记录响应:', res.data);
+
+      if (res.data?.code === 200 && res.data?.data?.list) {
+        setRecords(res.data.data.list);
+      } else {
+        console.warn('获取提现记录失败:', res.data);
+        // 失败时使用空列表，不影响用户体验
+        setRecords([]);
+      }
+    } catch (error) {
+      console.error('加载提现记录失败:', error);
+      // 失败时使用空列表，不影响用户体验
+      setRecords([]);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { label: string; color: string }> = {
@@ -88,6 +96,16 @@ const WithdrawPage = () => {
 
     try {
       // 调用后端接口申请提现
+      console.log('请求提现接口:', {
+        url: '/api/instructor/withdraw/apply',
+        data: {
+          amount,
+          bankName,
+          bankAccount: bankAccount.replace(/\s/g, ''),
+          accountName,
+        },
+      });
+
       const res = await Network.request({
         url: '/api/instructor/withdraw/apply',
         method: 'POST',
@@ -107,16 +125,32 @@ const WithdrawPage = () => {
         // 清空输入
         setWithdrawAmount('');
 
-        // 切换到历史记录标签
-        setActiveTab('all');
+        // 刷新提现记录列表
+        await loadWithdrawRecords();
       } else {
         throw new Error(res.data?.msg || '提现申请失败');
       }
     } catch (error: any) {
       console.error('提现申请失败:', error);
 
-      // 判断是否是网络错误或后端未实现
-      if (error.message?.includes('Network') || error.message?.includes('404')) {
+      // 判断错误类型
+      const errorMessage = error.message || '';
+      const isNetworkError =
+        errorMessage.includes('Network') ||
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('Failed to fetch') ||
+        !error.response ||
+        error.response?.status === 404 ||
+        error.response?.status === 500;
+
+      console.log('错误类型判断:', {
+        errorMessage,
+        isNetworkError,
+        hasResponse: !!error.response,
+        status: error.response?.status,
+      });
+
+      if (isNetworkError) {
         // 模拟提现成功（开发环境）
         Taro.showModal({
           title: '开发环境提示',
@@ -125,13 +159,20 @@ const WithdrawPage = () => {
             if (res.confirm) {
               Taro.showToast({ title: '提现申请已提交', icon: 'success' });
               setWithdrawAmount('');
-              setActiveTab('all');
+              // 刷新提现记录列表
+              loadWithdrawRecords();
             }
           },
         });
       } else {
+        // 接口返回了响应但状态码不是200
+        const errorMsg = error.response?.data?.msg ||
+                        error.response?.data?.message ||
+                        errorMessage ||
+                        '提现申请失败，请重试';
+        console.log('接口错误响应:', error.response?.data);
         Taro.showToast({
-          title: error.message || '提现申请失败，请重试',
+          title: errorMsg,
           icon: 'none',
         });
       }
@@ -150,11 +191,6 @@ const WithdrawPage = () => {
     { key: 'processing', label: '处理中' },
     { key: 'success', label: '已到账' },
   ];
-
-  const filteredRecords =
-    activeTab === 'all'
-      ? records
-      : records.filter((r) => r.status === activeTab);
 
   return (
     <View className="min-h-screen bg-gray-50">
@@ -314,14 +350,14 @@ const WithdrawPage = () => {
               </View>
 
               {/* 记录列表 */}
-              {filteredRecords.length === 0 ? (
+              {records.length === 0 ? (
                 <View className="flex flex-col items-center justify-center py-10">
                   <History size={48} color="#D1D5DB" />
                   <Text className="text-gray-400 mt-2">暂无记录</Text>
                 </View>
               ) : (
                 <View className="flex flex-col gap-3">
-                  {filteredRecords.map((record) => {
+                  {records.map((record) => {
                     const badge = getStatusBadge(record.status);
                     return (
                       <Card key={record.id}>

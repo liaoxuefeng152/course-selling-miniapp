@@ -5,6 +5,7 @@ export class InstructorService {
   // 内存存储（生产环境应该使用数据库）
   private certifies: Map<string, any> = new Map();
   private stats: Map<string, any> = new Map();
+  private withdraws: Map<string, any> = new Map();
 
   /**
    * 提交讲师认证申请
@@ -156,5 +157,93 @@ export class InstructorService {
 
     this.stats.set(userId, stats);
     return stats;
+  }
+
+  /**
+   * 申请提现
+   */
+  async applyWithdraw(data: {
+    amount: number;
+    bankName: string;
+    bankAccount: string;
+    accountName: string;
+  }) {
+    // 验证提现金额
+    if (data.amount <= 0) {
+      throw new Error('提现金额必须大于0');
+    }
+
+    if (data.amount < 100) {
+      throw new Error('最低提现金额为100元');
+    }
+
+    // 创建提现记录
+    const withdraw = {
+      id: `WD_${Date.now()}`,
+      amount: data.amount,
+      bankName: data.bankName,
+      bankAccount: this.maskBankAccount(data.bankAccount),
+      accountName: data.accountName,
+      status: 'pending', // pending, processing, success, failed
+      applyTime: new Date().toISOString(),
+      completeTime: null,
+      remark: '',
+    };
+
+    this.withdraws.set(withdraw.id, withdraw);
+    console.log(`[提现申请] 金额: ¥${data.amount}, 状态: 待审核`);
+
+    return withdraw;
+  }
+
+  /**
+   * 获取提现记录列表
+   */
+  async getWithdrawList(query: {
+    userId: string;
+    status?: string;
+    page?: number;
+    pageSize?: number;
+  }) {
+    const allWithdraws = Array.from(this.withdraws.values());
+
+    // 按状态筛选
+    let filtered = allWithdraws;
+    if (query.status) {
+      filtered = allWithdraws.filter((w) => w.status === query.status);
+    }
+
+    // 分页
+    const page = query.page || 1;
+    const pageSize = query.pageSize || 20;
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+
+    const list = filtered.slice(start, end).reverse(); // 最新的在前
+
+    return {
+      list,
+      total: filtered.length,
+      page,
+      pageSize,
+    };
+  }
+
+  /**
+   * 脱敏银行卡号
+   */
+  private maskBankAccount(account: string): string {
+    const cleanAccount = account.replace(/\s/g, '');
+    if (cleanAccount.length <= 8) {
+      return cleanAccount;
+    }
+    return cleanAccount.substring(0, 4) + ' ' + '*'.repeat(cleanAccount.length - 8) + ' ' + cleanAccount.substring(cleanAccount.length - 4);
+  }
+
+  /**
+   * 获取所有提现记录（调试用）
+   */
+  getAllWithdraws() {
+    return Array.from(this.withdraws.values());
   }
 }
