@@ -1,11 +1,16 @@
 import { View, Text, ScrollView } from '@tarojs/components';
+import { useState } from 'react';
 import Taro from '@tarojs/taro';
 import { Check } from 'lucide-react-taro';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 
+type PaymentMethod = 'wechat' | 'alipay';
+
 const OrderConfirmPage = () => {
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('wechat');
+
   // 模拟课程数据
   const course = {
     id: '1',
@@ -18,9 +23,10 @@ const OrderConfirmPage = () => {
   };
 
   const handlePayment = () => {
+    const paymentMethodName = selectedPayment === 'wechat' ? '微信支付' : '支付宝';
     Taro.showModal({
       title: '提示',
-      content: '模拟支付功能开发中，实际使用时需要接入微信支付',
+      content: `已选择${paymentMethodName}，模拟支付功能开发中，实际使用时需要接入对应支付方式`,
       confirmText: '知道了',
       showCancel: false,
       success: () => {
@@ -30,6 +36,10 @@ const OrderConfirmPage = () => {
         });
       },
     });
+  };
+
+  const handlePaymentSelect = (method: PaymentMethod) => {
+    setSelectedPayment(method);
   };
 
   return (
@@ -81,24 +91,37 @@ const OrderConfirmPage = () => {
           <Card>
             <CardContent className="p-4">
               <Text className="block text-sm font-medium text-gray-800 mb-3">支付方式</Text>
-              <View className="flex flex-row items-center justify-between py-3 border-b border-gray-100">
+              <View
+                className="flex flex-row items-center justify-between py-3 border-b border-gray-100"
+                onClick={() => handlePaymentSelect('wechat')}
+              >
                 <View className="flex flex-row items-center">
                   <View className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                     <Text className="block text-white text-xs font-bold">微</Text>
                   </View>
                   <Text className="block text-sm text-gray-800 ml-3">微信支付</Text>
                 </View>
-                <View className="w-5 h-5 rounded-full border-2 border-orange-500 flex items-center justify-center">
-                  <Check size={12} color="#FF6B35" />
-                </View>
+                {selectedPayment === 'wechat' && (
+                  <View className="w-5 h-5 rounded-full border-2 border-orange-500 flex items-center justify-center">
+                    <Check size={12} color="#FF6B35" />
+                  </View>
+                )}
               </View>
-              <View className="flex flex-row items-center justify-between py-3">
+              <View
+                className="flex flex-row items-center justify-between py-3"
+                onClick={() => handlePaymentSelect('alipay')}
+              >
                 <View className="flex flex-row items-center">
                   <View className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                     <Text className="block text-white text-xs font-bold">支</Text>
                   </View>
                   <Text className="block text-sm text-gray-800 ml-3">支付宝</Text>
                 </View>
+                {selectedPayment === 'alipay' && (
+                  <View className="w-5 h-5 rounded-full border-2 border-orange-500 flex items-center justify-center">
+                    <Check size={12} color="#FF6B35" />
+                  </View>
+                )}
               </View>
             </CardContent>
           </Card>
