@@ -86,15 +86,9 @@ const LoginPage = () => {
         Taro.showToast({ title: '登录成功', icon: 'success' });
 
         setTimeout(() => {
-          // 如果选择讲师角色，跳转到讲师工作台
-          if (selectedRole === UserRole.INSTRUCTOR) {
-            console.log('跳转到讲师工作台');
-            Taro.reLaunch({ url: '/pages/instructor/index/index' });
-          } else {
-            // 学员角色，跳转到首页
-            console.log('跳转到首页');
-            Taro.reLaunch({ url: '/pages/index/index' });
-          }
+          // 所有用户都跳转到首页
+          console.log('跳转到首页');
+          Taro.reLaunch({ url: '/pages/index/index' });
         }, 1000);
       } else {
         Taro.showToast({ title: res.data?.msg || '登录失败', icon: 'none' });

@@ -23,19 +23,7 @@ export default defineAppConfig({
     'pages/refund/index',
     'pages/my-courses/index',
     'pages/feedback/index',
-    'pages/about/index',
-    // 讲师端页面
-    'pages/instructor/index/index',
-    'pages/instructor/certify/index',
-    'pages/instructor/courses/index',
-    'pages/instructor/courses/edit/index',
-    'pages/instructor/live/index',
-    'pages/instructor/live/dashboard/index',
-    'pages/instructor/notifications/index',
-    'pages/instructor/courses-list/index',
-    'pages/instructor/students-list/index',
-    'pages/instructor/orders-list/index',
-    'pages/instructor/withdraw/index'
+    'pages/about/index'
   ],
   window: {
     backgroundTextStyle: 'light',

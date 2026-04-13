@@ -157,13 +157,6 @@ const ProfilePage = () => {
           switchRole(newRole);
           setShowRoleSwitchDialog(false);
           Taro.showToast({ title: '切换成功', icon: 'success' });
-
-          // 如果切换到讲师身份，跳转到讲师工作台
-          if (newRole === UserRole.INSTRUCTOR) {
-            setTimeout(() => {
-              Taro.redirectTo({ url: '/pages/instructor/index/index' });
-            }, 1000);
-          }
         }
       },
     });
