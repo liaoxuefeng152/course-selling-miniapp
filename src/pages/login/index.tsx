@@ -1,7 +1,7 @@
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 import Taro from '@tarojs/taro';
-import { ArrowLeft, User, GraduationCap } from 'lucide-react-taro';
+import { ArrowLeft } from 'lucide-react-taro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,7 +13,6 @@ const LoginPage = () => {
   const [code, setCode] = useState('');
   const [countdown, setCountdown] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.STUDENT);
 
   const handleSendCode = async () => {
     if (!phone) {
@@ -68,11 +67,11 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      // 调用后端接口登录
+      // 调用后端接口登录，默认使用学员角色
       const res = await Network.request({
         url: '/api/users/login',
         method: 'POST',
-        data: { phone, code, role: selectedRole },
+        data: { phone, code, role: UserRole.STUDENT },
       });
 
       console.log('登录响应:', res.data);
@@ -121,54 +120,6 @@ const LoginPage = () => {
 
         <Card>
           <CardContent className="p-6">
-            {/* 角色选择 */}
-            <View className="mb-6">
-              <Text className="block text-sm font-medium text-gray-700 mb-2">选择身份</Text>
-              <View className="grid grid-cols-2 gap-3">
-                <View
-                  className={`p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer ${
-                    selectedRole === UserRole.STUDENT
-                      ? 'border-orange-500 bg-orange-50'
-                      : 'border-gray-200 bg-white'
-                  }`}
-                  onClick={() => setSelectedRole(UserRole.STUDENT)}
-                >
-                  <GraduationCap
-                    size={32}
-                    color={selectedRole === UserRole.STUDENT ? '#FF6B35' : '#9CA3AF'}
-                  />
-                  <Text
-                    className={`block text-sm font-medium mt-2 ${
-                      selectedRole === UserRole.STUDENT ? 'text-orange-500' : 'text-gray-700'
-                    }`}
-                  >
-                    我是学员
-                  </Text>
-                </View>
-
-                <View
-                  className={`p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer ${
-                    selectedRole === UserRole.INSTRUCTOR
-                      ? 'border-orange-500 bg-orange-50'
-                      : 'border-gray-200 bg-white'
-                  }`}
-                  onClick={() => setSelectedRole(UserRole.INSTRUCTOR)}
-                >
-                  <User
-                    size={32}
-                    color={selectedRole === UserRole.INSTRUCTOR ? '#FF6B35' : '#9CA3AF'}
-                  />
-                  <Text
-                    className={`block text-sm font-medium mt-2 ${
-                      selectedRole === UserRole.INSTRUCTOR ? 'text-orange-500' : 'text-gray-700'
-                    }`}
-                  >
-                    我是讲师
-                  </Text>
-                </View>
-              </View>
-            </View>
-
             {/* 手机号输入 */}
             <View className="mb-6">
               <Text className="block text-sm font-medium text-gray-700 mb-2">手机号</Text>
