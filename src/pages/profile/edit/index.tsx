@@ -19,15 +19,47 @@ const EditProfilePage = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChooseAvatar = () => {
-    Taro.chooseImage({
-      count: 1,
-      sizeType: ['compressed'],
-      sourceType: ['album', 'camera'],
-      success: (res) => {
-        const tempFilePath = res.tempFilePaths[0];
-        setUserInfo((prev) => ({ ...prev, avatar: tempFilePath }));
-      },
-    });
+    console.log('点击了更换头像按钮');
+
+    // 检测平台环境
+    const env = Taro.getEnv();
+    const isMiniApp = env === Taro.ENV_TYPE.WEAPP || env === Taro.ENV_TYPE.TT;
+
+    if (isMiniApp) {
+      // 小程序环境：使用 chooseImage
+      Taro.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: (res) => {
+          console.log('选择图片成功:', res);
+          const tempFilePath = res.tempFilePaths[0];
+          setUserInfo((prev) => ({ ...prev, avatar: tempFilePath }));
+          Taro.showToast({ title: '选择成功', icon: 'success' });
+        },
+        fail: (err) => {
+          console.error('选择图片失败:', err);
+          Taro.showToast({
+            title: '选择图片失败，请重试',
+            icon: 'none'
+          });
+        },
+      });
+    } else {
+      // H5 环境：提示用户
+      Taro.showModal({
+        title: '提示',
+        content: 'H5 环境下更换头像功能受限，是否使用随机头像？',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            // 生成随机头像
+            const randomAvatar = `https://picsum.photos/seed/${Date.now()}/200/200`;
+            setUserInfo((prev) => ({ ...prev, avatar: randomAvatar }));
+            Taro.showToast({ title: '已更换随机头像', icon: 'success' });
+          }
+        },
+      });
+    }
   };
 
   const handleSave = () => {
@@ -64,7 +96,7 @@ const EditProfilePage = () => {
           <CardContent className="p-4">
             <View className="flex flex-row items-center justify-between">
               <Text className="block text-sm text-gray-600">头像</Text>
-              <View className="flex flex-row items-center" onClick={handleChooseAvatar}>
+              <View className="flex flex-row items-center" onClick={handleChooseAvatar} catchMove>
                 <Avatar className="w-16 h-16">
                   <AvatarImage src={userInfo.avatar} />
                 </Avatar>
