@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Taro from '@tarojs/taro';
 import { ArrowLeft } from 'lucide-react-taro';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ const LoginPage = () => {
   const [code, setCode] = useState('');
   const [countdown, setCountdown] = useState(0);
   const [loading, setLoading] = useState(false);
+  const phoneInputRef = useRef<any>(null);
 
   const handleSendCode = async () => {
     if (!phone) {
@@ -107,6 +108,19 @@ const LoginPage = () => {
     }
   };
 
+  const handlePhoneLogin = () => {
+    // 聚焦到手机号输入框
+    if (phoneInputRef.current) {
+      phoneInputRef.current.focus();
+    } else {
+      Taro.showToast({
+        title: '请输入手机号和验证码后点击下方登录按钮',
+        icon: 'none',
+        duration: 2000
+      });
+    }
+  };
+
   const handleLogin = async () => {
     if (!phone) {
       Taro.showToast({ title: '请输入手机号', icon: 'none' });
@@ -178,6 +192,7 @@ const LoginPage = () => {
             <View className="mb-6">
               <Text className="block text-sm font-medium text-gray-700 mb-2">手机号</Text>
               <Input
+                ref={phoneInputRef}
                 type="number"
                 placeholder="请输入手机号"
                 value={phone}
@@ -246,7 +261,7 @@ const LoginPage = () => {
               </View>
               <Text className="block text-xs text-gray-500 mt-2">微信登录</Text>
             </View>
-            <View className="flex flex-col items-center">
+            <View className="flex flex-col items-center" onClick={handlePhoneLogin}>
               <View className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
                 <Text className="text-xl">📱</Text>
               </View>
