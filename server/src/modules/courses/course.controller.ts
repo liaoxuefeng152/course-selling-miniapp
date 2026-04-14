@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Query, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { CourseService } from './course.service';
 
 @Controller('courses')
@@ -29,7 +29,7 @@ export class CourseController {
    * GET /api/courses/:id
    */
   @Get(':id')
-  async getCourseDetail(@Query('id') id: string) {
+  async getCourseDetail(@Param('id') id: string) {
     const result = await this.courseService.getCourseDetail(id);
     return {
       code: 200,
@@ -58,7 +58,7 @@ export class CourseController {
    * PUT /api/courses/:id
    */
   @Put(':id')
-  async updateCourse(@Query('id') id: string, @Body() body: any) {
+  async updateCourse(@Param('id') id: string, @Body() body: any) {
     const result = await this.courseService.updateCourse(id, body);
     return {
       code: 200,
@@ -73,7 +73,7 @@ export class CourseController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async deleteCourse(@Query('id') id: string) {
+  async deleteCourse(@Param('id') id: string) {
     await this.courseService.deleteCourse(id);
     return {
       code: 200,
@@ -88,7 +88,7 @@ export class CourseController {
    */
   @Post(':id/publish')
   @HttpCode(HttpStatus.OK)
-  async publishCourse(@Query('id') id: string, @Body() body: { status: 'published' | 'draft' }) {
+  async publishCourse(@Param('id') id: string, @Body() body: { status: 'published' | 'draft' }) {
     const result = await this.courseService.updateCourse(id, { status: body.status });
     return {
       code: 200,

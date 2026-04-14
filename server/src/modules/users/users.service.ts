@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
@@ -6,17 +6,20 @@ export class UsersService {
   private users: Map<string, any> = new Map();
   private codes: Map<string, { code: string; expireTime: number }> = new Map();
 
+  // 开发环境固定验证码（方便测试）
+  private readonly DEV_CODE = '123456';
+
   /**
    * 发送验证码
    */
   async sendCode(phone: string) {
     // 验证手机号格式
     if (!/^1\d{10}$/.test(phone)) {
-      throw new Error('手机号格式不正确');
+      throw new BadRequestException('手机号格式不正确');
     }
 
     // 生成6位验证码
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = this.DEV_CODE; // 开发环境使用固定验证码
     const expireTime = Date.now() + 5 * 60 * 1000; // 5分钟过期
 
     // 保存验证码
@@ -27,7 +30,7 @@ export class UsersService {
     // TODO: 实际应该调用短信服务发送验证码
     // await this.smsService.sendCode(phone, code);
 
-    return { phone, expiresIn: 300 };
+    return { code, expiresIn: 300 };
   }
 
   /**
@@ -59,7 +62,7 @@ export class UsersService {
   async login(phone: string, code: string, role: 'student' | 'instructor') {
     // 验证验证码
     if (!this.verifyCode(phone, code)) {
-      throw new Error('验证码错误或已过期');
+      throw new BadRequestException('验证码错误或已过期');
     }
 
     // 查找用户，如果不存在则创建
@@ -140,7 +143,7 @@ export class UsersService {
   async getUserInfo(userId: string) {
     const user = this.users.get(userId);
     if (!user) {
-      throw new Error('用户不存在');
+      throw new NotFoundException(`用户不存在: ${userId}`);
     }
     return user;
   }
@@ -151,7 +154,7 @@ export class UsersService {
   async updateUserInfo(userId: string, data: any) {
     const user = this.users.get(userId);
     if (!user) {
-      throw new Error('用户不存在');
+      throw new NotFoundException(`用户不存在: ${userId}`);
     }
 
     // 更新允许的字段

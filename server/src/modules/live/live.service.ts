@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class LiveService {
@@ -56,7 +56,7 @@ export class LiveService {
   async getLiveDetail(id: string) {
     const live = this.lives.get(id);
     if (!live) {
-      throw new Error('直播不存在');
+      throw new NotFoundException(`直播不存在: ${id}`);
     }
     return live;
   }
@@ -70,12 +70,13 @@ export class LiveService {
       instructorId: data.instructorId,
       title: data.title,
       description: data.description || '',
-      coverImage: data.coverImage || '',
+      coverImage: data.cover || data.coverImage || '', // 支持 cover 和 coverImage
       platform: data.platform || 'douyin', // douyin, wechat, all
       streamUrl: data.streamUrl || '',
-      scheduledStartTime: data.scheduledStartTime,
-      scheduledEndTime: data.scheduledEndTime,
-      status: 'scheduled', // scheduled, live, ended, cancelled
+      scheduledStartTime: data.startTime || data.scheduledStartTime,
+      scheduledEndTime: data.endTime || data.scheduledEndTime,
+      status: 'upcoming', // upcoming, live, ended, cancelled
+      price: data.price || 0,
       viewerCount: 0,
       peakViewerCount: 0,
       likeCount: 0,
@@ -97,16 +98,19 @@ export class LiveService {
   async updateLive(id: string, data: any) {
     const live = this.lives.get(id);
     if (!live) {
-      throw new Error('直播不存在');
+      throw new NotFoundException(`直播不存在: ${id}`);
     }
 
     // 更新允许的字段
     if (data.title) live.title = data.title;
     if (data.description !== undefined) live.description = data.description;
+    if (data.cover !== undefined) live.coverImage = data.cover;
     if (data.coverImage !== undefined) live.coverImage = data.coverImage;
     if (data.platform !== undefined) live.platform = data.platform;
     if (data.streamUrl !== undefined) live.streamUrl = data.streamUrl;
+    if (data.startTime !== undefined) live.scheduledStartTime = data.startTime;
     if (data.scheduledStartTime !== undefined) live.scheduledStartTime = data.scheduledStartTime;
+    if (data.endTime !== undefined) live.scheduledEndTime = data.endTime;
     if (data.scheduledEndTime !== undefined) live.scheduledEndTime = data.scheduledEndTime;
     if (data.productIds !== undefined) live.productIds = data.productIds;
     if (data.status !== undefined) live.status = data.status;
@@ -123,7 +127,7 @@ export class LiveService {
   async deleteLive(id: string) {
     const live = this.lives.get(id);
     if (!live) {
-      throw new Error('直播不存在');
+      throw new NotFoundException(`直播不存在: ${id}`);
     }
 
     this.lives.delete(id);
@@ -136,11 +140,11 @@ export class LiveService {
   async startLive(id: string) {
     const live = this.lives.get(id);
     if (!live) {
-      throw new Error('直播不存在');
+      throw new NotFoundException(`直播不存在: ${id}`);
     }
 
-    if (live.status !== 'scheduled') {
-      throw new Error('只能开始已预约的直播');
+    if (live.status !== 'upcoming' && live.status !== 'scheduled') {
+      throw new BadRequestException('只能开始未开始的直播');
     }
 
     live.status = 'live';
@@ -159,11 +163,11 @@ export class LiveService {
   async endLive(id: string) {
     const live = this.lives.get(id);
     if (!live) {
-      throw new Error('直播不存在');
+      throw new NotFoundException(`直播不存在: ${id}`);
     }
 
     if (live.status !== 'live') {
-      throw new Error('只能结束进行中的直播');
+      throw new BadRequestException('只能结束进行中的直播');
     }
 
     live.status = 'ended';
@@ -182,23 +186,22 @@ export class LiveService {
   async getLiveDashboard(id: string) {
     const live = this.lives.get(id);
     if (!live) {
-      throw new Error('直播不存在');
+      throw new NotFoundException(`直播不存在: ${id}`);
     }
 
     // 返回中控台所需的数据
     return {
-      ...live,
-      dashboard: {
-        viewerCount: live.viewerCount,
-        peakViewerCount: live.peakViewerCount,
-        likeCount: live.likeCount,
-        shareCount: live.shareCount,
-        duration: live.actualStartTime
-          ? Math.floor((Date.now() - new Date(live.actualStartTime).getTime()) / 1000)
-          : 0,
-        productSales: 0,
-        orders: [],
-      },
+      liveId: live.id,
+      status: live.status,
+      viewerCount: live.viewerCount,
+      peakViewerCount: live.peakViewerCount,
+      likeCount: live.likeCount,
+      shareCount: live.shareCount,
+      commentCount: 0,
+      duration: live.actualStartTime
+        ? Math.floor((Date.now() - new Date(live.actualStartTime).getTime()) / 1000)
+        : 0,
+      startTime: live.actualStartTime || live.scheduledStartTime,
     };
   }
 

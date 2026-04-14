@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class CourseService {
@@ -56,7 +56,7 @@ export class CourseService {
   async getCourseDetail(id: string) {
     const course = this.courses.get(id);
     if (!course) {
-      throw new Error('课程不存在');
+      throw new NotFoundException(`课程不存在: ${id}`);
     }
     return course;
   }
@@ -70,8 +70,8 @@ export class CourseService {
       instructorId: data.instructorId,
       title: data.title,
       description: data.description || '',
-      coverImage: data.coverImage || '',
-      price: data.price || 0,
+      coverImage: data.cover || data.coverImage || '', // 支持 cover 和 coverImage
+      price: data.discountPrice || data.price || 0, // 支持 discountPrice 和 price
       originalPrice: data.originalPrice || 0,
       category: data.category || '',
       tags: data.tags || [],
@@ -95,13 +95,15 @@ export class CourseService {
   async updateCourse(id: string, data: any) {
     const course = this.courses.get(id);
     if (!course) {
-      throw new Error('课程不存在');
+      throw new NotFoundException(`课程不存在: ${id}`);
     }
 
     // 更新允许的字段
     if (data.title) course.title = data.title;
     if (data.description !== undefined) course.description = data.description;
+    if (data.cover !== undefined) course.coverImage = data.cover;
     if (data.coverImage !== undefined) course.coverImage = data.coverImage;
+    if (data.discountPrice !== undefined) course.price = data.discountPrice;
     if (data.price !== undefined) course.price = data.price;
     if (data.originalPrice !== undefined) course.originalPrice = data.originalPrice;
     if (data.category !== undefined) course.category = data.category;
@@ -121,7 +123,7 @@ export class CourseService {
   async deleteCourse(id: string) {
     const course = this.courses.get(id);
     if (!course) {
-      throw new Error('课程不存在');
+      throw new NotFoundException(`课程不存在: ${id}`);
     }
 
     this.courses.delete(id);

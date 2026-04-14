@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Query, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { LiveService } from './live.service';
 
 @Controller('live')
@@ -29,7 +29,7 @@ export class LiveController {
    * GET /api/live/:id
    */
   @Get(':id')
-  async getLiveDetail(@Query('id') id: string) {
+  async getLiveDetail(@Param('id') id: string) {
     const result = await this.liveService.getLiveDetail(id);
     return {
       code: 200,
@@ -58,7 +58,7 @@ export class LiveController {
    * PUT /api/live/:id
    */
   @Put(':id')
-  async updateLive(@Query('id') id: string, @Body() body: any) {
+  async updateLive(@Param('id') id: string, @Body() body: any) {
     const result = await this.liveService.updateLive(id, body);
     return {
       code: 200,
@@ -73,7 +73,7 @@ export class LiveController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async deleteLive(@Query('id') id: string) {
+  async deleteLive(@Param('id') id: string) {
     await this.liveService.deleteLive(id);
     return {
       code: 200,
@@ -88,7 +88,7 @@ export class LiveController {
    */
   @Post(':id/start')
   @HttpCode(HttpStatus.OK)
-  async startLive(@Query('id') id: string) {
+  async startLive(@Param('id') id: string) {
     const result = await this.liveService.startLive(id);
     return {
       code: 200,
@@ -103,7 +103,7 @@ export class LiveController {
    */
   @Post(':id/end')
   @HttpCode(HttpStatus.OK)
-  async endLive(@Query('id') id: string) {
+  async endLive(@Param('id') id: string) {
     const result = await this.liveService.endLive(id);
     return {
       code: 200,
@@ -117,7 +117,7 @@ export class LiveController {
    * GET /api/live/:id/dashboard
    */
   @Get(':id/dashboard')
-  async getLiveDashboard(@Query('id') id: string) {
+  async getLiveDashboard(@Param('id') id: string) {
     const result = await this.liveService.getLiveDashboard(id);
     return {
       code: 200,

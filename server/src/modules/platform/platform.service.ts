@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 
 @Injectable()
 export class PlatformService {
@@ -31,7 +31,7 @@ export class PlatformService {
     // 检查是否已绑定
     const existing = this.accounts.get(id);
     if (existing && existing.userId === data.userId) {
-      throw new Error('该账号已绑定');
+      throw new BadRequestException('该账号已绑定');
     }
 
     const account = {
@@ -63,11 +63,11 @@ export class PlatformService {
     const account = this.accounts.get(id);
 
     if (!account) {
-      throw new Error('账号不存在');
+      throw new NotFoundException('账号不存在');
     }
 
     if (account.userId !== userId) {
-      throw new Error('无权解绑该账号');
+      throw new ForbiddenException('无权解绑该账号');
     }
 
     this.accounts.delete(id);
@@ -82,11 +82,11 @@ export class PlatformService {
     const account = this.accounts.get(id);
 
     if (!account) {
-      throw new Error('账号不存在');
+      throw new NotFoundException('账号不存在');
     }
 
     if (account.userId !== userId) {
-      throw new Error('无权操作该账号');
+      throw new ForbiddenException('无权操作该账号');
     }
 
     // TODO: 调用平台接口刷新 token
@@ -101,7 +101,7 @@ export class PlatformService {
 
     console.log(`[刷新Token] 平台: ${platform}, OpenID: ${openId}`);
 
-    return account;
+    return { accessToken: newToken, expiresIn: 30 * 24 * 60 * 60 };
   }
 
   /**
@@ -118,7 +118,7 @@ export class PlatformService {
       // 微信视频号授权 URL
       authorizeUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=YOUR_APPID&response_type=code&scope=snsapi_userinfo&redirect_uri=${encodeURIComponent(redirectUri)}#wechat_redirect`;
     } else {
-      throw new Error('不支持的平台');
+      throw new BadRequestException('不支持的平台');
     }
 
     return { authorizeUrl };
