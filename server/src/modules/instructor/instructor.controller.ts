@@ -86,6 +86,38 @@ export class InstructorController {
   }
 
   /**
+   * 获取讲师信息（学员端/公开信息）
+   * GET /api/instructor/info
+   */
+  @Get('info')
+  async getInstructorInfo(@Query('instructorId') instructorId: string) {
+    const result = await this.instructorService.getInstructorInfo(instructorId);
+    return {
+      code: 200,
+      msg: '获取成功',
+      data: result,
+    };
+  }
+
+  /**
+   * 获取讲师的课程列表（学员端/公开信息）
+   * GET /api/instructor/courses
+   */
+  @Get('courses')
+  async getInstructorCourses(@Query() query: {
+    instructorId: string;
+    page?: number;
+    pageSize?: number;
+  }) {
+    const result = await this.instructorService.getInstructorCourses(query);
+    return {
+      code: 200,
+      msg: '获取成功',
+      data: result,
+    };
+  }
+
+  /**
    * 申请提现（讲师端）
    * POST /api/instructor/withdraw/apply
    */

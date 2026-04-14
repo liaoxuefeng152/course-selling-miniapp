@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class InstructorService {
@@ -238,6 +238,81 @@ export class InstructorService {
       return cleanAccount;
     }
     return cleanAccount.substring(0, 4) + ' ' + '*'.repeat(cleanAccount.length - 8) + ' ' + cleanAccount.substring(cleanAccount.length - 4);
+  }
+
+  /**
+   * 获取讲师信息（学员端/公开信息）
+   */
+  async getInstructorInfo(instructorId: string) {
+    // 查找讲师认证记录
+    const certify = Array.from(this.certifies.values()).find((c) => c.userId === instructorId && c.status === 'verified');
+
+    if (!certify) {
+      throw new NotFoundException(`讲师不存在: ${instructorId}`);
+    }
+
+    // 获取讲师统计数据
+    const stats = await this.getStats(instructorId);
+
+    // 返回讲师公开信息
+    return {
+      id: instructorId,
+      name: certify.certifyType === 'personal' ? certify.realName : certify.organizationName,
+      avatar: `https://picsum.photos/seed/${instructorId}/200/200`,
+      bio: certify.certifyType === 'personal' ? '资深讲师，专注于课程创作' : '专业培训机构',
+      courseCount: stats.courseCount,
+      studentCount: stats.studentCount,
+      rating: 4.8 + Math.random() * 0.2, // 模拟评分 4.8-5.0
+      certifyType: certify.certifyType,
+      createdAt: certify.createdAt,
+    };
+  }
+
+  /**
+   * 获取讲师的课程列表（学员端/公开信息）
+   */
+  async getInstructorCourses(query: {
+    instructorId: string;
+    page?: number;
+    pageSize?: number;
+  }) {
+    const page = query.page || 1;
+    const pageSize = query.pageSize || 20;
+
+    // TODO: 从课程服务获取讲师的课程列表
+    // 这里使用模拟数据
+    const mockCourses = [
+      {
+        id: `course_${query.instructorId}_1`,
+        title: '课程示例1',
+        coverImage: `https://picsum.photos/seed/${query.instructorId}_1/400/300`,
+        price: 299.00,
+        originalPrice: 599.00,
+        studentCount: Math.floor(Math.random() * 1000),
+        rating: 4.8,
+      },
+      {
+        id: `course_${query.instructorId}_2`,
+        title: '课程示例2',
+        coverImage: `https://picsum.photos/seed/${query.instructorId}_2/400/300`,
+        price: 199.00,
+        originalPrice: 399.00,
+        studentCount: Math.floor(Math.random() * 1000),
+        rating: 4.7,
+      },
+    ];
+
+    // 分页
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const list = mockCourses.slice(start, end);
+
+    return {
+      list,
+      total: mockCourses.length,
+      page,
+      pageSize,
+    };
   }
 
   /**

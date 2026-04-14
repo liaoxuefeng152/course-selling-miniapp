@@ -673,7 +673,9 @@
     "bio": "资深影视后期讲师，10年从业经验",
     "courseCount": 20,
     "studentCount": 5000,
-    "rating": 4.8
+    "rating": 4.8,
+    "certifyType": "personal",
+    "createdAt": "2024-01-01T00:00:00.000Z"
   }
 }
 ```
