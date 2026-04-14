@@ -53,6 +53,60 @@ const LoginPage = () => {
     }
   };
 
+  const handleWechatLogin = async () => {
+    // 检查是否在微信小程序环境
+    const env = Taro.getEnv();
+    if (env !== Taro.ENV_TYPE.WEAPP && env !== Taro.ENV_TYPE.TT) {
+      Taro.showToast({
+        title: '微信登录仅在小程序中可用',
+        icon: 'none'
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 调用微信登录 API 获取 code
+      const loginRes = await Taro.login();
+
+      console.log('微信登录 code:', loginRes.code);
+
+      if (!loginRes.code) {
+        throw new Error('获取微信登录凭证失败');
+      }
+
+      // 调用后端接口进行微信登录
+      const res = await Network.request({
+        url: '/api/users/wechat-login',
+        method: 'POST',
+        data: { code: loginRes.code, role: UserRole.STUDENT },
+      });
+
+      console.log('微信登录响应:', res.data);
+
+      if (res.data?.code === 200 && res.data?.data) {
+        const { user, token } = res.data.data;
+
+        // 保存用户信息到 store
+        useUserStore.getState().login(user, token);
+
+        Taro.showToast({ title: '登录成功', icon: 'success' });
+
+        setTimeout(() => {
+          Taro.reLaunch({ url: '/pages/index/index' });
+        }, 1000);
+      } else {
+        Taro.showToast({ title: res.data?.msg || '登录失败', icon: 'none' });
+      }
+    } catch (error) {
+      console.error('微信登录失败:', error);
+      Taro.showToast({ title: '微信登录失败，请重试', icon: 'none' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogin = async () => {
     if (!phone) {
       Taro.showToast({ title: '请输入手机号', icon: 'none' });
@@ -186,7 +240,7 @@ const LoginPage = () => {
           </View>
 
           <View className="flex flex-row justify-center gap-12">
-            <View className="flex flex-col items-center">
+            <View className="flex flex-col items-center" onClick={handleWechatLogin}>
               <View className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
                 <Text className="text-xl">💬</Text>
               </View>
