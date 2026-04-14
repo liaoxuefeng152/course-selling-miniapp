@@ -13,6 +13,7 @@ export class CourseService {
     pageSize?: number;
     status?: string;
     keyword?: string;
+    category?: string;
   }) {
     const page = query.page || 1;
     const pageSize = query.pageSize || 20;
@@ -22,6 +23,11 @@ export class CourseService {
     // 按状态筛选
     if (query.status) {
       list = list.filter((item) => item.status === query.status);
+    }
+
+    // 按分类筛选
+    if (query.category) {
+      list = list.filter((item) => item.category === query.category);
     }
 
     // 按关键词搜索
