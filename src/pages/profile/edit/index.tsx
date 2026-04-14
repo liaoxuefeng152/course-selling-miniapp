@@ -1,22 +1,38 @@
 import { View, Text, ScrollView } from '@tarojs/components';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { Camera } from 'lucide-react-taro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
+import { useUserStore } from '@/stores/user';
+import { Network } from '@/network';
 
 const EditProfilePage = () => {
+  const { userInfo: currentUser } = useUserStore();
   const [userInfo, setUserInfo] = useState({
-    nickname: '学员用户',
-    avatar: 'https://picsum.photos/seed/avatar/200/200',
-    phone: '138****8888',
-    email: 'user@example.com',
-    bio: '热爱学习，不断进步',
+    nickname: '',
+    avatar: '',
+    phone: '',
+    email: '',
+    bio: '',
   });
 
   const [loading, setLoading] = useState(false);
+
+  // 从 store 加载用户信息
+  useEffect(() => {
+    if (currentUser) {
+      setUserInfo({
+        nickname: currentUser.nickname || '',
+        avatar: currentUser.avatar || 'https://picsum.photos/seed/avatar/200/200',
+        phone: currentUser.phone || '',
+        email: currentUser.email || '',
+        bio: (currentUser as any).bio || '',
+      });
+    }
+  }, [currentUser]);
 
   const handleChooseAvatar = () => {
     console.log('点击了更换头像按钮');
@@ -62,7 +78,7 @@ const EditProfilePage = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!userInfo.nickname.trim()) {
       Taro.showToast({ title: '请输入昵称', icon: 'none' });
       return;
@@ -70,22 +86,58 @@ const EditProfilePage = () => {
 
     setLoading(true);
 
-    // 模拟保存
-    setTimeout(() => {
-      setLoading(false);
-      Taro.showToast({ title: '保存成功', icon: 'success' });
-      
-      // 保存到本地存储
-      try {
-        Taro.setStorageSync('userInfo', userInfo);
-      } catch (e) {
-        console.error('保存失败:', e);
-      }
+    try {
+      console.log('保存用户信息:', userInfo);
+      console.log('当前用户ID:', currentUser?.id);
 
-      setTimeout(() => {
-        Taro.navigateBack();
-      }, 1000);
-    }, 1000);
+      // 调用后端接口更新用户信息
+      const res = await Network.request({
+        url: '/api/users/update',
+        method: 'POST',
+        data: {
+          userId: currentUser?.id,
+          nickname: userInfo.nickname,
+          avatar: userInfo.avatar,
+          email: userInfo.email,
+          bio: userInfo.bio,
+        },
+      });
+
+      console.log('更新用户信息响应:', res.data);
+
+      if (res.data?.code === 200) {
+        // 更新 store 中的用户信息
+        const updatedUser = {
+          ...currentUser,
+          nickname: userInfo.nickname,
+          avatar: userInfo.avatar,
+          email: userInfo.email,
+          bio: userInfo.bio,
+        };
+
+        // 调用 store 的更新方法
+        useUserStore.getState().updateUserInfo(updatedUser);
+
+        Taro.showToast({ title: '保存成功', icon: 'success' });
+
+        setTimeout(() => {
+          Taro.navigateBack();
+        }, 1000);
+      } else {
+        Taro.showToast({
+          title: res.data?.msg || '保存失败',
+          icon: 'none'
+        });
+      }
+    } catch (error) {
+      console.error('保存失败:', error);
+      Taro.showToast({
+        title: '保存失败，请重试',
+        icon: 'none'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

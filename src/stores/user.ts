@@ -28,6 +28,7 @@ export interface UserInfo {
   avatar: string
   phone: string
   email?: string
+  bio?: string
   role: UserRole
 }
 
@@ -73,6 +74,9 @@ interface UserState {
   setUserInfo: (info: UserInfo) => void
   setToken: (token: string) => void
 
+  // 更新用户信息
+  updateUserInfo: (info: Partial<UserInfo>) => void
+
   // 设置讲师信息
   setInstructorInfo: (info: InstructorInfo | null) => void
   setInstructorStats: (stats: InstructorStats | null) => void
@@ -103,6 +107,21 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   // 设置用户信息
   setUserInfo: (info) => set({ userInfo: info }),
+
+  // 更新用户信息（部分更新）
+  updateUserInfo: (info) => {
+    const { userInfo } = get()
+    if (userInfo) {
+      const updatedUserInfo = { ...userInfo, ...info }
+      set({ userInfo: updatedUserInfo })
+      // 保存到本地存储
+      try {
+        localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
+      } catch (e) {
+        console.error('保存用户信息失败:', e)
+      }
+    }
+  },
 
   // 设置 token
   setToken: (token) => {
