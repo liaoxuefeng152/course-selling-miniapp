@@ -54,7 +54,17 @@ const LoginPage = () => {
     }
   };
 
+  const handlePhoneLogin = () => {
+    console.log('手机号登录按钮被点击');
+    Taro.showToast({
+      title: '请在上方输入手机号和验证码（固定为123456），然后点击下方"登录"按钮',
+      icon: 'none',
+      duration: 3500
+    });
+  };
+
   const handleWechatLogin = async () => {
+    console.log('微信登录按钮被点击');
     // 检查是否在微信小程序环境
     const env = Taro.getEnv();
     if (env !== Taro.ENV_TYPE.WEAPP && env !== Taro.ENV_TYPE.TT) {
@@ -105,19 +115,6 @@ const LoginPage = () => {
       Taro.showToast({ title: '微信登录失败，请重试', icon: 'none' });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handlePhoneLogin = () => {
-    // 聚焦到手机号输入框
-    if (phoneInputRef.current) {
-      phoneInputRef.current.focus();
-    } else {
-      Taro.showToast({
-        title: '请输入手机号和验证码后点击下方登录按钮',
-        icon: 'none',
-        duration: 2000
-      });
     }
   };
 
@@ -255,13 +252,21 @@ const LoginPage = () => {
           </View>
 
           <View className="flex flex-row justify-center gap-12">
-            <View className="flex flex-col items-center" onClick={handleWechatLogin}>
+            <View
+              className="flex flex-col items-center"
+              onClick={handleWechatLogin}
+              catchMove
+            >
               <View className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
                 <Text className="text-xl">💬</Text>
               </View>
               <Text className="block text-xs text-gray-500 mt-2">微信登录</Text>
             </View>
-            <View className="flex flex-col items-center" onClick={handlePhoneLogin}>
+            <View
+              className="flex flex-col items-center"
+              onClick={handlePhoneLogin}
+              catchMove
+            >
               <View className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
                 <Text className="text-xl">📱</Text>
               </View>
