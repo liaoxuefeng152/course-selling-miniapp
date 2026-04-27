@@ -35,8 +35,6 @@ const EditProfilePage = () => {
   }, [currentUser]);
 
   const handleChooseAvatar = () => {
-    console.log('点击了更换头像按钮');
-
     // 检测平台环境
     const env = Taro.getEnv();
     const isMiniApp = env === Taro.ENV_TYPE.WEAPP || env === Taro.ENV_TYPE.TT;
@@ -48,7 +46,6 @@ const EditProfilePage = () => {
         sizeType: ['compressed'],
         sourceType: ['album', 'camera'],
         success: (res) => {
-          console.log('选择图片成功:', res);
           const tempFilePath = res.tempFilePaths[0];
           setUserInfo((prev) => ({ ...prev, avatar: tempFilePath }));
           Taro.showToast({ title: '选择成功', icon: 'success' });
@@ -87,9 +84,6 @@ const EditProfilePage = () => {
     setLoading(true);
 
     try {
-      console.log('保存用户信息:', userInfo);
-      console.log('当前用户ID:', currentUser?.id);
-
       // 调用后端接口更新用户信息
       const res = await Network.request({
         url: '/api/users/update',
@@ -102,8 +96,6 @@ const EditProfilePage = () => {
           bio: userInfo.bio,
         },
       });
-
-      console.log('更新用户信息响应:', res.data);
 
       if (res.data?.code === 200) {
         // 更新 store 中的用户信息

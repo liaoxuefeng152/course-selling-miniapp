@@ -55,7 +55,6 @@ const LoginPage = () => {
   };
 
   const handlePhoneLogin = () => {
-    console.log('手机号登录按钮被点击');
     Taro.showToast({
       title: '请在上方输入手机号和验证码（固定为123456），然后点击下方"登录"按钮',
       icon: 'none',
@@ -64,7 +63,6 @@ const LoginPage = () => {
   };
 
   const handleWechatLogin = async () => {
-    console.log('微信登录按钮被点击');
     // 检查是否在微信小程序环境
     const env = Taro.getEnv();
     if (env !== Taro.ENV_TYPE.WEAPP && env !== Taro.ENV_TYPE.TT) {

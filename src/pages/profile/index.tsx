@@ -64,15 +64,13 @@ const ProfilePage = () => {
 
   const loadUserInfo = () => {
     // 数据已从 store 自动加载，无需额外处理
-    console.log('用户信息已从 store 加载');
   };
 
   const handleLogin = () => {
-    console.log('点击登录按钮，准备跳转到登录页面');
     Taro.navigateTo({
       url: '/pages/login/index',
       success: () => {
-        console.log('跳转登录页面成功');
+        Taro.hideLoading();
       },
       fail: (err) => {
         console.error('跳转登录页面失败:', err);
@@ -139,7 +137,6 @@ const ProfilePage = () => {
   const handleDebugClear = () => {
     logout();
     Taro.showToast({ title: '已清除存储', icon: 'success' });
-    console.log('调试：已清除所有存储');
   };
 
   // 身份切换
