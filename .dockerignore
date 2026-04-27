@@ -1,0 +1,63 @@
+# 依赖
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# 构建输出
+dist
+build
+.webpack
+.turbo
+
+# 缓存
+.cache
+.eslintcache
+.tsbuildinfo
+.next
+.nuxt
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 测试
+coverage
+.nyc_output
+
+# 临时文件
+*.log
+tmp
+temp
+
+# 文档
+README.md
+*.md
+docs
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+docker-entrypoint.sh
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# 其他
+.DS_Store
+Thumbs.db
