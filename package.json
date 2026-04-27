@@ -4,16 +4,18 @@
   "private": true,
   "description": "Coze Mini Program Application",
   "scripts": {
-    "build": "pnpm exec concurrently --kill-others-on-fail --kill-signal SIGKILL -n lint,tsc,web,weapp,tt,server -c red,blue,green,yellow,cyan,magenta \"pnpm lint:build\" \"pnpm tsc\" \"pnpm build:web\" \"pnpm build:weapp\" \"pnpm build:tt\" \"pnpm build:server\"",
+    "build": "pnpm exec concurrently --kill-others-on-fail --kill-signal SIGTERM -n lint,tsc,web,weapp,tt,server -c red,blue,green,yellow,cyan,magenta \"pnpm lint:build\" \"pnpm tsc\" \"pnpm build:web\" \"pnpm build:weapp\" \"pnpm build:tt\" \"pnpm build:server\"",
     "build:server": "pnpm --filter server build",
     "build:tt": "taro build --type tt",
     "build:weapp": "taro build --type weapp",
     "build:web": "taro build --type h5",
-    "dev": "pnpm exec concurrently --kill-others --kill-signal SIGKILL -n web,server -c blue,green \"pnpm dev:web\" \"pnpm dev:server\"",
+    "dev": "pnpm exec concurrently --kill-others --kill-signal SIGTERM -n web,server -c blue,green \"pnpm dev:web\" \"pnpm dev:server\"",
     "dev:server": "pnpm --filter server dev",
     "dev:tt": "taro build --type tt --watch",
     "dev:weapp": "taro build --type weapp --watch",
     "dev:web": "taro build --type h5 --watch",
+    "diagnose": "bash ./diagnose.sh",
+    "fix:dev": "bash ./fix-dev.sh",
     "preinstall": "npx only-allow pnpm",
     "postinstall": "weapp-tw patch",
     "kill:all": "pkill -9 -f 'concurrently' 2>/dev/null || true; pkill -9 -f 'nest start' 2>/dev/null || true; pkill -9 -f 'taro build' 2>/dev/null || true; pkill -9 -f 'node.*dev' 2>/dev/null || true; echo 'All dev processes cleaned'",
@@ -24,7 +26,7 @@
     "preview:tt": "taro build --type tt --preview",
     "preview:weapp": "taro build --type weapp --preview",
     "tsc": "npx tsc --noEmit --skipLibCheck",
-    "validate": "pnpm exec concurrently --kill-others-on-fail --kill-signal SIGKILL -n lint,tsc -c red,blue \"pnpm lint:build\" \"pnpm tsc\""
+    "validate": "pnpm exec concurrently --kill-others-on-fail --kill-signal SIGTERM -n lint,tsc -c red,blue \"pnpm lint:build\" \"pnpm tsc\""
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx,css}": [
